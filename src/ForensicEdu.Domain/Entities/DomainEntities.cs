@@ -4,7 +4,7 @@ using ForensicEdu.Domain.Enums;
 
 namespace ForensicEdu.Domain.Entities;
 
-public class User
+public partial class User
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Nombres { get; set; } = string.Empty;

@@ -1,7 +1,10 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ForensicEdu.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace ForensicEdu.WebApi;
+namespace ForensicEdu.Infrastructure.BackgroundJobs;
 
 // Grades the last saved answers even when the student's browser was closed.
 public class ExpiredExamsWorker(IServiceScopeFactory scopes, ILogger<ExpiredExamsWorker> logger) : BackgroundService

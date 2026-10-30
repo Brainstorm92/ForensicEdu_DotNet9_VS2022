@@ -1,1 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --color-panel: #ffffff;
+  --color-on-brand: #ffffff;
+  --color-canvas: #f9f9ff;
+  --color-surface-low: #f0f3ff;
+  --color-surface-high: #e7eeff;
+  --color-ink: #111c2d;
+  --color-muted: #44474d;
+  --color-line: #dfe5ef;
+  --color-navy: #0f1e36;
+  --color-brand: #006a61;
+  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+@layer base {
+  html { color-scheme: light; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--color-canvas); color: var(--color-ink); }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.025em; }
+  button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+  button:not(:disabled), summary { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--color-brand); outline-offset: 3px; }
+  input, select, textarea { accent-color: var(--color-brand); }
+  ::selection { background: #86f2e4; color: #0f1e36; }
+}
+
+/* Solid action fills require white labels; tinted status surfaces keep dark labels. */
+:is(button,a,span,div)[class~="bg-emerald-600"],
+:is(button,a,span,div)[class~="bg-indigo-600"],
+:is(button,a,span,div)[class~="bg-blue-600"],
+:is(button,a,span,div)[class~="bg-red-600"],
+:is(button,a,span,div)[class~="bg-rose-600"] { color: white; }
+[class~="bg-brand"] { color: var(--color-on-brand); }
+:is(button,a)[class~="bg-brand"] svg { color: inherit; }
+header { box-shadow: 0 1px 8px rgb(15 30 54 / 6%); }
+footer { background: var(--color-panel); }
+.stitch-hero { background: linear-gradient(115deg,#0f1e36,#263143 65%,#0f1e36); border: 0; box-shadow: 0 8px 24px rgb(15 30 54 / 12%); }
+.stitch-hero h1 { color: white; max-width: 720px; font-size: clamp(1.9rem,4vw,3rem); }
+.stitch-hero p { color: #d8e3fb; max-width: 680px; }
+.stitch-hero .text-muted { color: #d8e3fb; }
+.stitch-hero :is(.text-brand,.text-emerald-700) { color: #86f2e4; }
+.stitch-image-shade ~ div { color: white; }
+.stitch-image-shade ~ div .text-brand { color: #86f2e4; }
+.stitch-catalog section > div > div.group { box-shadow: 0 2px 8px rgb(15 30 54 / 4%); }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+
+/* Stitch night palette, shared by all screens and their dialogs. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-canvas: #0e1321;
+  --color-panel: #161b2a;
+  --color-surface-low: #1a1f2e;
+  --color-surface-high: #252a39;
+  --color-ink: #dee2f6;
+  --color-muted: #bacac4;
+  --color-line: #3b4a45;
+  --color-brand: #46efcf;
+  --color-on-brand: #00382e;
+  --color-slate-50: #1a1f2e;
+  --color-slate-100: #252a39;
+  --color-slate-200: #303444;
+  --color-slate-300: #3b4a45;
+}
+:root[data-theme="dark"] { --color-emerald-50: #103b30; --color-emerald-200: #103b30; --color-emerald-700: #6ee7b7; }
+:root[data-theme="dark"] { --color-green-50: #153a28; --color-green-200: #153a28; --color-green-700: #86efac; }
+:root[data-theme="dark"] { --color-red-50: #432027; --color-red-200: #432027; --color-red-700: #fca5a5; }
+:root[data-theme="dark"] { --color-rose-50: #43202c; --color-rose-200: #43202c; --color-rose-700: #fda4af; }
+:root[data-theme="dark"] { --color-blue-50: #182e4b; --color-blue-200: #182e4b; --color-blue-700: #93c5fd; }
+:root[data-theme="dark"] { --color-indigo-50: #29264d; --color-indigo-200: #29264d; --color-indigo-700: #c7d2fe; }
+:root[data-theme="dark"] { --color-purple-50: #352346; --color-purple-200: #352346; --color-purple-700: #d8b4fe; }
+:root[data-theme="dark"] { --color-cyan-50: #103743; --color-cyan-200: #103743; --color-cyan-700: #67e8f9; }
+:root[data-theme="dark"] { --color-orange-50: #432e1c; --color-orange-200: #432e1c; --color-orange-700: #fdba74; }
+:root[data-theme="dark"] { --color-yellow-50: #3c341a; --color-yellow-200: #3c341a; --color-yellow-700: #fde047; }
+
+/* A printable diploma remains white and QR codes retain their scan contrast. */
+.certificate-paper {
+  color-scheme: light;
+  --color-panel: #ffffff;
+  --color-ink: #111c2d;
+  --color-muted: #44474d;
+  --color-brand: #006a61;
+  --color-slate-50: #f8fafc;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-700: #047857;
+  --color-rose-50: #fff1f2;
+  --color-rose-700: #be123c;
+}
+@media print {
+  :root[data-theme] { color-scheme: light; --color-canvas: #fff; --color-panel: #fff; --color-ink: #111c2d; --color-muted: #44474d; --color-brand: #006a61; }
+}
+
+
+/* Let scrollable tabs shrink inside flex layouts rather than widen the viewport. */
+#root, main, .flex-1, .stitch-catalog { min-width: 0; }
+.stitch-catalog { width: 100%; }
+.account-tools { max-width: 100%; }
+.site-brand { min-width: 0; flex: 1; }
+.site-brand > div:first-child { flex-shrink: 0; }
+@media (max-width: 639px) {
+  .site-header-row { gap: .5rem; }
+  .site-brand { flex-basis: 55%; }
+  .site-brand .text-lg { font-size: .875rem; }
+  .site-brand .text-\[10px\] { display: none; }
+  .site-header-row > div:last-child { gap: .375rem; }
+  .stitch-catalog section > .flex.items-center.justify-between { flex-wrap: wrap; gap: .75rem; }
+  .stitch-hero { padding: 1.5rem; }
+}
+
+
+/* Responsive layout: intrinsic content stays within its own grid or scroll region. */
+main > div, .responsive-page, .stitch-catalog { width: 100%; min-width: 0; }
+main :is(.grid, .flex) > div { min-width: 0; }
+main :is(h1,h2,h3,p,dd,code), [role="dialog"] { overflow-wrap: anywhere; }
+input:not([type="checkbox"]):not([type="radio"]), select, textarea { min-width: 0; max-width: 100%; }
+.responsive-table { max-width: 100%; overscroll-behavior-inline: contain; }
+.responsive-table table { min-width: 42rem; }
+.mobile-navigation { max-height: 55dvh; overflow-y: auto; }
+.mobile-navigation button { min-height: 44px; white-space: normal; text-align: left; }
+.demo-tools[open] > div { max-height: 40dvh; overflow-y: auto; }
+.demo-tools summary:focus-visible { outline-offset: -3px; }
+.support-dialog { max-height: calc(100dvh - 7rem); }
+@media (max-width: 767px) {
+  .responsive-page, .stitch-catalog { padding-top: 1.25rem; padding-bottom: 1.5rem; }
+  main .flex.items-center.justify-between { flex-wrap: wrap; gap: .75rem; }
+  main .flex.items-center.justify-between > div { max-width: 100%; }
+  .site-header-row { flex-wrap: nowrap; }
+  .site-brand { flex-basis: auto; }
+  .site-brand > div:last-child { min-width: 0; }
+  .site-brand p { display: none; }
+  .site-header-row > div:last-child { flex-shrink: 0; }
+  .site-header-row .text-lg { font-size: .875rem; }
+  .fixed.inset-0 { padding: .75rem; }
+  .fixed.inset-0 > div { max-height: calc(100dvh - 1.5rem); }
+  .fixed.inset-0 :is(input,select,textarea) { font-size: 16px; }
+  .certificate-paper { padding: 1.25rem; border-width: 4px; }
+  .certificate-paper h1 { font-size: 1.5rem; }
+}
+@media (max-width: 374px) {
+  .site-header-row { padding-inline: .75rem; }
+  .site-brand { gap: .5rem; }
+  .site-brand > div:first-child { width: 2rem; height: 2rem; }
+  .site-header-row .text-lg { font-size: .75rem; }
+}

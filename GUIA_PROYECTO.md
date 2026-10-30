@@ -2,13 +2,21 @@
 
 Esta guía describe el código revisado el 30 de octubre de 2026. Para conocer el cumplimiento funcional, consulta `REVISION_REQUISITOS.md`. El manual anterior contiene afirmaciones de funcionalidades completas que todavía son simulaciones; esta guía distingue ambas cosas.
 
+## Adaptación con MediatR y temas
+
+Los controladores ahora envían los casos de uso mediante ISender a los handlers de Application. Consulta ARQUITECTURA_MEDIATR.md para el mapa actualizado, las decisiones de persistencia y las pruebas. La cabecera incluye un selector de modo claro y nocturno que guarda tu preferencia.
+
+## Direcciones de API e interfaz
+
+En Development, `http://localhost:5000/` redirige a Scalar (`/scalar/v1`). La interfaz compilada está en `/app/` y Vite sigue disponible en el puerto 3000. Las rutas inexistentes de `/api` devuelven 404, sin cargar React. La documentación continúa deshabilitada en Production.
+
 ## Qué ejecutas con F5
 
 Selecciona WebApi como único proyecto de inicio, perfil `http`. Al compilar, .NET ejecuta `npm run build` en ClientApp y copia el resultado a `WebApi/wwwroot`. WebApi sirve la interfaz y la API en el mismo proceso:
 
 | Dirección | Contenido |
 |---|---|
-| http://localhost:5000/ | Interfaz React compilada |
+| http://localhost:5000/app/ | Interfaz React compilada |
 | http://localhost:5000/scalar/v1 | Explorador de API, solo en Development |
 | http://localhost:5000/openapi/v1.json | Contrato de API, solo en Development |
 | /api/courses | Catálogo leído de PostgreSQL |
@@ -29,7 +37,7 @@ src/
   ForensicEdu.Domain/          Entidades y estados de negocio
     Entities/DomainEntities.cs
     Enums/DomainEnums.cs
-  ForensicEdu.Application/     Reglas y contratos
+  ForensicEdu.Application/     Casos de uso MediatR, validación y contratos
     Common/Interfaces/        Acceso abstracto a datos y servicios
     Services/                 Evaluación, antifraude, vigencia
   ForensicEdu.Infrastructure/  Implementaciones técnicas
@@ -63,7 +71,7 @@ compose.yaml                   PostgreSQL local opcional con Docker
 
 ## Cómo leer el código
 
-Empieza por `DomainEntities.cs`: define usuario, producto, orden, pago, matrícula, intento y certificado. Luego lee `OrdersController` para entender cómo entra una solicitud. El controlador usa `IApplicationDbContext`, cuya implementación es `ApplicationDbContext`. EF Core traduce las consultas C# a PostgreSQL. Los servicios de Application ejecutan las reglas compartidas. Finalmente, lee `AppContext.tsx` y sus consumidores para ver cómo la interfaz representa los procesos.
+Empieza por `DomainEntities.cs`: define usuario, producto, orden, pago, matrícula, intento y certificado. Luego lee `OrdersController` para entender cómo entra una solicitud. El controlador usa `ISender`; el handler correspondiente usa `IApplicationDbContext`, cuya implementación es `ApplicationDbContext`. EF Core traduce las consultas C# a PostgreSQL. Los servicios de Application ejecutan las reglas compartidas. Finalmente, lee `AppContext.tsx` y sus consumidores para ver cómo la interfaz representa los procesos.
 
 Las referencias son: Domain no depende de las otras capas; Application depende de Domain; Infrastructure implementa contratos de Application; WebApi configura y reúne las capas. React es un cliente independiente que se compila a HTML, CSS y JavaScript.
 

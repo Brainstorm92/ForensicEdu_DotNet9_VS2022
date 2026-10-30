@@ -7,10 +7,7 @@ import { FloatingSupport } from './components/FloatingSupport';
 import { CatalogSection } from './components/CatalogSection';
 import { StudentDashboard } from './components/StudentDashboard';
 import { AdminPanel } from './components/AdminPanel';
-import { ClientReviewGuide } from './components/ClientReviewGuide';
 import { PublicQRVerifier } from './components/PublicQRVerifier';
-import { DotnetArchitectureExplorer } from './components/DotnetArchitectureExplorer';
-import { ManualGuiaSection } from './components/ManualGuiaSection';
 
 const MainContent: React.FC = () => {
   const { activeTab } = useApp();
@@ -26,10 +23,7 @@ const MainContent: React.FC = () => {
       {activeTab === 'mis-consultas' && <StudentDashboard currentSubTab="mis-consultas" />}
       {activeTab === 'perfil' && <StudentDashboard currentSubTab="perfil" />}
       {activeTab === 'admin' && <AdminPanel />}
-      {activeTab === 'guia-cliente' && <ClientReviewGuide />}
       {activeTab === 'verificador-publico' && <PublicQRVerifier />}
-      {activeTab === 'dotnet-architecture' && <DotnetArchitectureExplorer />}
-      {activeTab === 'manual-guia' && <ManualGuiaSection />}
     </main>
   );
 };
@@ -37,7 +31,7 @@ const MainContent: React.FC = () => {
 export default function App() {
   return (
     <AppProvider>
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
+      <div className="min-h-screen bg-canvas text-ink flex flex-col font-sans selection:bg-brand selection:text-ink">
         <AccountAccess />
         <Header />
         <div className="flex-1">

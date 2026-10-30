@@ -14,6 +14,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Course> Courses => Set<Course>();
+    public DbSet<CourseDocument> CourseDocuments => Set<CourseDocument>();
+    public DbSet<CourseModule> CourseModules => Set<CourseModule>();
     public DbSet<LiveEvent> LiveEvents => Set<LiveEvent>();
     public DbSet<AdvisoryService> AdvisoryServices => Set<AdvisoryService>();
     public DbSet<Order> Orders => Set<Order>();
@@ -29,6 +31,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<CourseModule>().ToTable("CourseModule");
+        modelBuilder.Entity<CourseDocument>().ToTable("CourseDocument");
 
         // User
         modelBuilder.Entity<User>(entity =>

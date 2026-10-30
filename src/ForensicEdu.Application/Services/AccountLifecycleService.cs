@@ -26,11 +26,7 @@ public class AccountLifecycleService : IAccountLifecycleService
         // Rule: Each approved payment grants/renews 2 years validity from the payment date
         var newValidUntil = paymentDate.AddYears(2);
 
-        user.ValidUntil = newValidUntil;
-        user.Status = AccountStatus.ACTIVO;
-        user.AccountStatus = AccountStatus.ACTIVO;
-        user.LastPurchaseDate = paymentDate;
-        user.HasApprovedPurchase = true;
+        user.RenewFromApprovedPayment(paymentDate);
 
         _context.AuditLogs.Add(new AuditLog
         {
@@ -52,7 +48,7 @@ public class AccountLifecycleService : IAccountLifecycleService
         // Rule 1: Users registered without any purchase for more than 30 days
         var thirtyDaysAgo = now.AddDays(-30);
         var unpaidUsersToFlag = await _context.Users
-            .Where(u => !u.HasApprovedPurchase && (u.Status == AccountStatus.ACTIVO || u.Status == AccountStatus.REGISTRADA) && u.RegisteredAt <= thirtyDaysAgo)
+            .Where(u => u.Role == ForensicEdu.Domain.Enums.UserRole.ESTUDIANTE && !u.HasApprovedPurchase && (u.Status == AccountStatus.ACTIVO || u.Status == AccountStatus.REGISTRADA) && u.RegisteredAt <= thirtyDaysAgo)
             .ToListAsync(cancellationToken);
 
         foreach (var user in unpaidUsersToFlag)

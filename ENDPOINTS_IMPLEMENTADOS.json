@@ -1,0 +1,402 @@
+[
+  {
+    "group": "PublicCatalog",
+    "name": "ListPublicEvents",
+    "request": "ListPublicEventsQuery",
+    "verb": "Get",
+    "route": "events",
+    "role": null
+  },
+  {
+    "group": "PublicCatalog",
+    "name": "GetPublicEvent",
+    "request": "GetPublicEventQuery",
+    "verb": "Get",
+    "route": "events/{id}",
+    "role": null
+  },
+  {
+    "group": "PublicCatalog",
+    "name": "ListPublicAdvisorys",
+    "request": "ListPublicAdvisorysQuery",
+    "verb": "Get",
+    "route": "advisories",
+    "role": null
+  },
+  {
+    "group": "PublicCatalog",
+    "name": "GetPublicAdvisory",
+    "request": "GetPublicAdvisoryQuery",
+    "verb": "Get",
+    "route": "advisories/{id}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "ListManagedCourses",
+    "request": "ListManagedCoursesQuery",
+    "verb": "Get",
+    "route": "courses",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "GetManagedCourse",
+    "request": "GetManagedCourseQuery",
+    "verb": "Get",
+    "route": "courses/{id}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "CreateCourse",
+    "request": "CreateCourseCommand",
+    "verb": "Post",
+    "route": "courses",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "UpdateCourse",
+    "request": "UpdateCourseCommand",
+    "verb": "Put",
+    "route": "courses/{id}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "ArchiveCourse",
+    "request": "ArchiveCourseCommand",
+    "verb": "Delete",
+    "route": "courses/{id}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "CreateModule",
+    "request": "CreateModuleCommand",
+    "verb": "Post",
+    "route": "courses/{id}/modules",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "UpdateModule",
+    "request": "UpdateModuleCommand",
+    "verb": "Put",
+    "route": "courses/{id}/modules/{moduleId}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "DeleteModule",
+    "request": "DeleteModuleCommand",
+    "verb": "Delete",
+    "route": "courses/{id}/modules/{moduleId}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "CreateDocument",
+    "request": "CreateDocumentCommand",
+    "verb": "Post",
+    "route": "courses/{id}/modules/{moduleId}/documents",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "UpdateDocument",
+    "request": "UpdateDocumentCommand",
+    "verb": "Put",
+    "route": "courses/{id}/modules/{moduleId}/documents/{documentId}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "DeleteDocument",
+    "request": "DeleteDocumentCommand",
+    "verb": "Delete",
+    "route": "courses/{id}/modules/{moduleId}/documents/{documentId}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "GetQuestionBank",
+    "request": "GetQuestionBankQuery",
+    "verb": "Get",
+    "route": "courses/{id}/questions",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "SaveQuestionBank",
+    "request": "SaveQuestionBankCommand",
+    "verb": "Put",
+    "route": "courses/{id}/questions",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "ListManagedEvents",
+    "request": "ListManagedEventsQuery",
+    "verb": "Get",
+    "route": "events",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "GetManagedEvent",
+    "request": "GetManagedEventQuery",
+    "verb": "Get",
+    "route": "events/{id}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "CreateEvent",
+    "request": "CreateEventCommand",
+    "verb": "Post",
+    "route": "events",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "UpdateEvent",
+    "request": "UpdateEventCommand",
+    "verb": "Put",
+    "route": "events/{id}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "CancelEvent",
+    "request": "CancelEventCommand",
+    "verb": "Delete",
+    "route": "events/{id}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "ListManagedAdvisorys",
+    "request": "ListManagedAdvisorysQuery",
+    "verb": "Get",
+    "route": "advisories",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "GetManagedAdvisory",
+    "request": "GetManagedAdvisoryQuery",
+    "verb": "Get",
+    "route": "advisories/{id}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "CreateAdvisory",
+    "request": "CreateAdvisoryCommand",
+    "verb": "Post",
+    "route": "advisories",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "UpdateAdvisory",
+    "request": "UpdateAdvisoryCommand",
+    "verb": "Put",
+    "route": "advisories/{id}",
+    "role": null
+  },
+  {
+    "group": "CatalogAdmin",
+    "name": "DeleteAdvisory",
+    "request": "DeleteAdvisoryCommand",
+    "verb": "Delete",
+    "route": "advisories/{id}",
+    "role": null
+  },
+  {
+    "group": "AccountManagement",
+    "name": "UpdateProfile",
+    "request": "UpdateProfileCommand",
+    "verb": "Put",
+    "route": "me",
+    "role": null
+  },
+  {
+    "group": "AccountManagement",
+    "name": "ChangePassword",
+    "request": "ChangePasswordCommand",
+    "verb": "Put",
+    "route": "password",
+    "role": null
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "ListUsers",
+    "request": "ListUsersQuery",
+    "verb": "Get",
+    "route": "users",
+    "role": "1,5"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "GetUser",
+    "request": "GetUserQuery",
+    "verb": "Get",
+    "route": "users/{id}",
+    "role": "1,5"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "SetUserStatus",
+    "request": "SetUserStatusCommand",
+    "verb": "Put",
+    "route": "users/{id}/status",
+    "role": "1"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "SetUserRole",
+    "request": "SetUserRoleCommand",
+    "verb": "Put",
+    "route": "users/{id}/role",
+    "role": "1"
+  },
+  {
+    "group": "StudentWorkspace",
+    "name": "ListMyCertificates",
+    "request": "ListMyCertificatesQuery",
+    "verb": "Get",
+    "route": "certificates",
+    "role": null
+  },
+  {
+    "group": "StudentWorkspace",
+    "name": "ListMyPayments",
+    "request": "ListMyPaymentsQuery",
+    "verb": "Get",
+    "route": "payments",
+    "role": null
+  },
+  {
+    "group": "StudentWorkspace",
+    "name": "GetClassroom",
+    "request": "GetClassroomQuery",
+    "verb": "Get",
+    "route": "enrollments/{id}/classroom",
+    "role": null
+  },
+  {
+    "group": "StudentWorkspace",
+    "name": "GetMyExamHistory",
+    "request": "GetMyExamHistoryQuery",
+    "verb": "Get",
+    "route": "enrollments/{id}/attempts",
+    "role": null
+  },
+  {
+    "group": "StudentWorkspace",
+    "name": "GetModuleVideo",
+    "request": "GetModuleVideoQuery",
+    "verb": "Get",
+    "route": "enrollments/{id}/modules/{moduleId}/video",
+    "role": null
+  },
+  {
+    "group": "StudentWorkspace",
+    "name": "GetDocumentAccess",
+    "request": "GetDocumentAccessQuery",
+    "verb": "Get",
+    "route": "enrollments/{id}/documents/{documentId}",
+    "role": null
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "ListPayments",
+    "request": "ListPaymentsQuery",
+    "verb": "Get",
+    "route": "payments",
+    "role": "1,3"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "GetPayment",
+    "request": "GetPaymentQuery",
+    "verb": "Get",
+    "route": "payments/{id}",
+    "role": "1,3"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "ReviewPayment",
+    "request": "ReviewPaymentCommand",
+    "verb": "Put",
+    "route": "payments/{id}/review",
+    "role": "1,3"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "GetPaymentVoucher",
+    "request": "GetPaymentVoucherQuery",
+    "verb": "Get",
+    "route": "payments/{id}/voucher",
+    "role": "1,3"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "ListSupportTickets",
+    "request": "ListSupportTicketsQuery",
+    "verb": "Get",
+    "route": "tickets",
+    "role": "1,5"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "GetSupportTicket",
+    "request": "GetSupportTicketQuery",
+    "verb": "Get",
+    "route": "tickets/{id}",
+    "role": "1,5"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "SetTicketStatus",
+    "request": "SetTicketStatusCommand",
+    "verb": "Put",
+    "route": "tickets/{id}/status",
+    "role": "1,5"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "GetSummaryReport",
+    "request": "GetSummaryReportQuery",
+    "verb": "Get",
+    "route": "reports/summary",
+    "role": "1"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "ListAcademicEnrollments",
+    "request": "ListAcademicEnrollmentsQuery",
+    "verb": "Get",
+    "route": "enrollments",
+    "role": "1,2"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "ListAcademicAttempts",
+    "request": "ListAcademicAttemptsQuery",
+    "verb": "Get",
+    "route": "exam-attempts",
+    "role": "1,2"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "ListAcademicCertificates",
+    "request": "ListAcademicCertificatesQuery",
+    "verb": "Get",
+    "route": "certificates",
+    "role": "1,2"
+  }
+]

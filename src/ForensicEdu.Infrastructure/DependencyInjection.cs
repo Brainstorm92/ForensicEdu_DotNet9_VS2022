@@ -12,32 +12,22 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Support both SQL Server and PostgreSQL, with in-memory fallback for local dev without a DB server
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        var provider = configuration.GetValue<string>("DatabaseProvider") ?? "PostgreSQL";
+        var databaseProvider = configuration.GetValue<string>("DatabaseProvider") ?? "PostgreSQL";
+        if (!databaseProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("El proveedor de esta aplicación debe ser PostgreSQL.");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("Configure ConnectionStrings:DefaultConnection para PostgreSQL mediante secretos o variables de entorno.");
+        services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString, b => b
+            .MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
+            .EnableRetryOnFailure(3, TimeSpan.FromSeconds(3), null)));
 
-        if (provider.Equals("InMemory", StringComparison.OrdinalIgnoreCase))
-        {
-            // InMemory for immediate prototyping/unit testing
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseInMemoryDatabase("ForensicEduDb"));
-        }
-        else if (provider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
-        {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString, b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
-        }
-        else
-        {
-            if (string.IsNullOrWhiteSpace(connectionString))
-                throw new InvalidOperationException("No se cargó la conexión PostgreSQL. Ejecute WebApi con el perfil http (Development) y configure ConnectionStrings:DefaultConnection mediante Administrar secretos de usuario.");
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(connectionString, b => b
-                    .MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
-                    .EnableRetryOnFailure(3, TimeSpan.FromSeconds(3), null)));
-        }
-
+        services.AddScoped<IPasswordService, PasswordService>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IVoucherStorage, PrivateVoucherStorage>();
+        services.AddScoped<IPersistenceErrors, PersistenceErrors>();
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IQrCodeService, QrCodeService>();
         services.AddScoped<IPdfCertificateService, PdfCertificateService>();
         services.AddScoped<AccountLifecycleHangfireJob>();
