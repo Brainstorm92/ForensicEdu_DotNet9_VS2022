@@ -1,6 +1,6 @@
 # Pruebas de la API con PostgreSQL
 
-La API dispone de 77 endpoints de negocio: los 27 anteriores y 50 nuevos. Los nuevos casos de uso pasan por MediatR, FluentValidation y EF Core con PostgreSQL. Se probaron contra una instancia PostgreSQL 17 local aislada, usando el esquema existente. No se aplicaron cambios a Contabo.
+La API dispone de 83 casos de uso de negocio y una ruta adicional de configuración de Google. Los nuevos casos de uso pasan por MediatR, FluentValidation y EF Core con PostgreSQL. Se probaron contra una instancia PostgreSQL 17 local aislada, usando el esquema existente. Las pruebas HTTP y de navegador usan bases locales aisladas. Los productos de prueba y el superadministrador solicitados se aprovisionan por comandos locales contra la conexión configurada.
 
 ## Iniciar y autenticar
 
@@ -137,9 +137,9 @@ Las respuestas usan 200 para datos, 204 para modificaciones sin cuerpo, 400 para
 
 ## Límites concretos
 
-La persistencia está implementada en los endpoints. Las pantallas React que aún usan AppContext de demostración no se conectan automáticamente por añadir estas rutas; prueba los procesos desde Scalar.
+Las pantallas de catálogo, registro, pagos, aprobación, aula, examen y certificados utilizan la API. AppContext carga registros de PostgreSQL y no persiste datos académicos en localStorage. Los datos de demostración anteriores no se migran. Después de recargar, inicia sesión de nuevo: el token solo se mantiene en memoria.
 
-Los documentos y videos se registran como URLs HTTPS. El endpoint comprueba la matrícula antes de entregar el acceso, pero el proveedor debe emitir enlaces temporales y proteger el recurso en origen. No se ha integrado Zoom, correo, HLS ni generación de marcas de agua. Los documentos que exijan marca de agua no se entregan si el servicio no está configurado.
+Los videos siguen usando enlaces HTTPS. Los materiales PDF y Word (.docx) se suben a RustFS privado y se leen en el visor con autorización por matrícula y marca de agua personal. Los enlaces antiguos de materiales se bloquean hasta que se vuelva a subir el archivo. No se ha integrado Zoom, correo ni HLS. Ver DOCUMENTOS_PRIVADOS.md para rutas, restricciones y límites de protección.
 
 DELETE de un curso lo archiva; DELETE de un evento lo cancela. No se eliminan módulos de cursos con matrículas ni asesorías con órdenes. Las actualizaciones no alteran el precio de órdenes ya creadas. La observación de pagos queda registrada en auditoría.
 
@@ -154,3 +154,32 @@ dotnet run --project tests/ForensicEdu.ArchitectureChecks
 # Definir API_TEST_DLL y FORENSIC_TEST_PG_PORT; el script crea su propia base forensicedu_test_*.
 node tests/Test-PlatformEndpoints.mjs
 ```
+
+
+La arquitectura mantiene los endpoints y contratos anteriores, con request, handler y validador separados. Los fallos transitorios repetidos de PostgreSQL pueden abrir el circuit breaker y devolver 503 con Retry-After. El servidor no reintenta automáticamente una escritura: ante pérdida de confirmación, consulta primero si la operación se registró. Consulta ARQUITECTURA_MEDIATR.md para configuración y pruebas.
+
+
+## Administración y datos de prueba
+
+- Panel Admin → Cursos y contenidos: crear borradores, editar, publicar/archivar; agregar/editar módulos, enlaces de video y materiales PDF; editar el banco de preguntas y marcar respuestas correctas.
+- Panel Admin → Gestión de usuarios: superadministrador crea cuentas por identidad, rol y vigencia; asigna roles y cambia estados. Soporte solo consulta usuarios.
+- Roles y permisos presenta los siete perfiles y los permisos implementados. Docente y consultor no reciben edición global de cursos. No se muestran garantías ficticias de 2FA, DRM, firmas criptográficas ni roles personalizados.
+- POST /api/admin/users: exclusivo SUPERADMIN. Contrato: nombres, apellidos, email, password (12 a 72 bytes), role (1–7), validDays (0 permanente para personal; estudiante requiere días positivos), dni y phone opcionales. No devuelve hashes.
+- Iniciar sesión acepta correo o Username. La contraseña nunca se almacena en texto claro.
+
+Para bases existentes, ejecutar `database-upgrade-usernames.sql` antes de iniciar la nueva versión. Es una actualización aditiva; no elimina registros. `database-postgresql.sql` ya la incluye para instalaciones nuevas.
+
+Alta local explícita de un superadministrador adicional: definir temporalmente `AdminProvision__Username` y `AdminProvision__Password`, ejecutar la API con `--provision-admin` y eliminar las variables después. El comando aplica la columna Username, crea la cuenta y audita el alta; no reemplaza ni asciende cuentas existentes. Si se repite con la misma identidad y contraseña, no duplica la cuenta. No existe endpoint público de aprovisionamiento. No guardar contraseñas en el repositorio.
+
+En Development, `--seed-demo` usa Entity Framework para insertar dos cursos identificados con `[PRUEBA]` (Balística básica y Escena del crimen), sus módulos y preguntas, un seminario y una asesoría. Es idempotente, conserva los productos existentes y no crea órdenes, pagos, matrículas, intentos ni certificados ficticios. Estos aparecen al efectuar las acciones desde una cuenta real. Los productos de prueba no incluyen videos ni contactos externos.
+
+Recorrido para probar: registrarse → comprar → subir comprobante → aprobar como financiero/superadmin → entrar al aula → completar módulos → rendir examen → consultar certificado. Verificar en `Orders`, `PaymentEvidences`, `Enrollments`, `ExamAttempts`, `DigitalCertificates` filtrando por usuario/orden.
+
+`tests/Test-ConnectedUi.mjs` automatiza en Chrome el recorrido hasta SQL con una base PostgreSQL local aislada: seed idempotente, ingreso por Username, alta administrativa de curso/módulo/preguntas/usuario, pago, aprobación, examen, certificado, recuperación tras recarga, error de red sin éxito simulado y panel móvil. Requiere API_TEST_DLL y FORENSIC_TEST_PG_PORT; no utiliza la base configurada del usuario.
+
+
+El acceso con Google y el registro renovado están documentados en ACCESO_GOOGLE.md. La ruta de configuración no consulta datos de negocio; emite el nonce de sesión. El Client ID local se reutiliza de PSYCO_APP, con firma, audiencia y nonce validados por la API. No se vinculan usuarios automáticamente por correo.
+
+## Materiales privados
+
+POST /api/admin/courses/{courseId}/modules/{moduleId}/documents/upload (multipart title/file, roles 1 y 2, 20 MB). GET /api/student/enrollments/{enrollmentId}/documents/{documentId}/content requiere cuenta vigente, matrícula propia y pago aprobado del mismo curso. La ruta de metadatos ya no devuelve enlaces públicos. Los endpoints JSON anteriores se conservan por compatibilidad de metadatos, pero sus enlaces no autorizan lectura. Ver DOCUMENTOS_PRIVADOS.md.

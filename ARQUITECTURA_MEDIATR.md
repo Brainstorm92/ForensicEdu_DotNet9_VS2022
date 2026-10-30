@@ -1,6 +1,6 @@
 # Arquitectura de ForensicEdu con MediatR
 
-La API conserva sus rutas y contratos JSON y delega los 77 endpoints a comandos y consultas de Application mediante ISender.Send. La estructura toma como referencia Event.Service y mantiene PostgreSQL como único proveedor de ejecución.
+La API conserva sus rutas y contratos JSON y delega los 83 casos de uso a comandos y consultas de Application mediante ISender.Send. La estructura toma como referencia Event.Service y mantiene PostgreSQL como único proveedor de ejecución.
 
 ```mermaid
 flowchart LR
@@ -55,3 +55,58 @@ ArchitectureChecks resuelve todos los handlers desde DI y prueba el pipeline, re
 
 
 Los 50 casos de uso añadidos y sus permisos están descritos en API_PRUEBAS.md. El esquema conserva las tablas originales CourseModule y CourseDocument.
+
+
+## Responsabilidad única y segmentación
+
+Cada uno de los 83 casos de uso tiene su request y su handler en archivos separados, conservando namespaces y rutas. Los 74 validadores existentes también tienen su propio archivo; una consulta sin entradas no necesita un validador vacío.
+
+```text
+Handlers/Management/CatalogAdmin/Commands/CreateCourse/
+  CreateCourseCommand.cs
+  CreateCourseCommandHandler.cs
+  CreateCourseCommandValidator.cs
+```
+
+Los contratos, interfaces, entidades y enums se separan por tipo público. Los validadores de entradas se reutilizan mediante SetValidator, sin repetir las reglas de cada DTO en todos sus handlers.
+
+Infrastructure.DependencyInjection compone tres registros: AddPostgreSqlPersistence, AddDatabaseResilience y AddPlatformAdapters. Application registra MediatR, validadores y servicios académicos. Los DbContext y adaptadores con estado de solicitud son scoped; el circuito y el clasificador de fallos son singleton. IApplicationDbContext e IUnitOfWork resuelven la misma instancia scoped.
+
+ExpiredExamsWorker se ocupa de la programación y el ciclo de vida; IExpiredExamProcessor procesa las evaluaciones vencidas. Ambos reciben sus dependencias por constructor.
+
+## Circuit breaker de PostgreSQL
+
+Polly.Core 8.6.6 implementa el circuito en Infrastructure, detrás de IDatabaseResilience. Application solo conoce la interfaz y DatabaseCircuitOpenException; no depende de Polly ni de Npgsql.
+
+El pipeline ejecuta ValidationBehavior antes de DatabaseResilienceBehavior. Un error de entrada se rechaza antes de consultar la dependencia. El mismo circuito protege la consulta de cuenta del JWT y los trabajos académicos de segundo plano. El bootstrap local y la comprobación de salud de desarrollo no pasan por el pipeline.
+
+La configuración pública está en Resilience:PostgreSQL de appsettings.json:
+
+```json
+{
+  "FailureRatio": 0.5,
+  "MinimumThroughput": 5,
+  "SamplingDurationSeconds": 30,
+  "BreakDurationSeconds": 15
+}
+```
+
+Con al menos cinco operaciones en una ventana de 30 segundos, una proporción de fallos transitorios del 50% abre el circuito por 15 segundos. Después admite una prueba; un éxito lo cierra y un fallo transitorio lo abre de nuevo. El estado es local al proceso, no distribuido entre réplicas. Se registran las transiciones sin imprimir credenciales ni datos bancarios.
+
+NpgsqlTransientFailureClassifier cuenta exclusivamente excepciones Npgsql transitorias, incluidas las envueltas. Validaciones, unicidad, cancelaciones y errores de negocio no disparan el circuito. Un circuito abierto se traduce a HTTP 503 con Retry-After.
+
+El circuito no reintenta el handler. Se retiró EnableRetryOnFailure para evitar repetir escrituras ante un commit ambiguo. Si una escritura pierde la confirmación, el cliente debe consultar su estado antes de repetirla. No se introduce un estado de éxito falso ni se sustituye PostgreSQL por almacenamiento en memoria cuando la dependencia falla.
+
+## Comprobaciones de resiliencia
+
+```powershell
+dotnet run --project tests/ForensicEdu.ResilienceChecks
+# Con API_TEST_DLL apuntando a la API compilada y PostgreSQL 17 instalado localmente:
+node tests/Test-DatabaseCircuit.mjs
+```
+
+ResilienceChecks utiliza un reloj controlado para verificar apertura, rechazo inmediato, cancelación, half-open concurrente, recuperación, reapertura, clasificación, validación previa, opciones inválidas y tiempos de vida de DI. Además comprueba un tipo público por archivo y los archivos de cada request, handler y validador.
+
+Test-DatabaseCircuit crea su propia instancia PostgreSQL local, consulta la API, detiene esa instancia para abrir el circuito y la reinicia para comprobar la recuperación. No utiliza la base de Contabo.
+
+Los materiales privados tienen comandos/consultas separados bajo Handlers/Documents y puertos IDocumentStorage e IDocumentProcessor. RustFS y el procesamiento seguro de Word se implementan en Infrastructure/Documents. Ver DOCUMENTOS_PRIVADOS.md.

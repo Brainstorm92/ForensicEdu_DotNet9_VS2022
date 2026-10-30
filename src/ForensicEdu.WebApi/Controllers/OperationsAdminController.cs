@@ -26,6 +26,11 @@ namespace ForensicEdu.WebApi.Controllers;
 [Authorize]
 public sealed class OperationsAdminController(ISender sender) : ControllerBase
 {
+    [HttpPost("users")]
+    [Authorize(Roles="1")]
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserInput input)
+        => (await sender.Send(new ForensicEdu.Application.Handlers.Management.OperationsAdmin.Commands.CreateUser.CreateUserCommand(input),HttpContext.RequestAborted)).ToActionResult();
+
     [HttpGet("users")]
     [Authorize(Roles="1,5")]
     public async Task<IActionResult> ListUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null)

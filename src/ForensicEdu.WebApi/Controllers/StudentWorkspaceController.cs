@@ -38,6 +38,7 @@ public sealed class StudentWorkspaceController(ISender sender) : ControllerBase
         => (await sender.Send(new GetModuleVideoQuery(id, moduleId),HttpContext.RequestAborted)).ToActionResult();
 
     [HttpGet("enrollments/{id}/documents/{documentId}")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> GetDocumentAccess(string id, string documentId)
         => (await sender.Send(new GetDocumentAccessQuery(id, documentId),HttpContext.RequestAborted)).ToActionResult();
 }

@@ -1,3 +1,8 @@
+using ForensicEdu.Infrastructure.Media;
+using ForensicEdu.Application.Handlers.Media.Commands.UploadImage;
+using ForensicEdu.Application.Handlers.Media.Queries.GetImage;
+using ForensicEdu.Infrastructure.Resilience;
+using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using FluentValidation;
 using ForensicEdu.Application;
@@ -30,10 +35,12 @@ void Check(bool condition, string message) { if (!condition) throw new Exception
 var assembly = typeof(ForensicEdu.Application.DependencyInjection).Assembly;
 Check(!assembly.GetReferencedAssemblies().Any(a => a.Name!.StartsWith("Microsoft.AspNetCore") || a.Name == "Npgsql"), "Application no depende de HTTP ni Npgsql");
 var requests = assembly.GetTypes().Where(t => !t.IsAbstract && typeof(IRequest<ApplicationResult>).IsAssignableFrom(t)).ToArray();
-Check(requests.Length == 77, "77 comandos y consultas de MediatR descubiertos");
+Check(requests.Length == 83, "83 comandos y consultas de MediatR descubiertos");
 
 var services = new ServiceCollection();
 services.AddLogging(); services.AddApplicationServices();
+services.AddSingleton<IGoogleIdentityValidator,DisabledGoogle>();
+services.AddDatabaseResilience(new ConfigurationBuilder().Build());
 services.AddDbContext<ApplicationDbContext>(o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
 services.AddScoped<IApplicationDbContext>(p => p.GetRequiredService<ApplicationDbContext>());
 services.AddScoped<IUnitOfWork>(p => p.GetRequiredService<ApplicationDbContext>());
@@ -41,6 +48,8 @@ var actor = new TestUser(); services.AddSingleton<ICurrentUser>(actor);
 services.AddScoped<IPasswordService, PasswordService>(); services.AddScoped<IPersistenceErrors, PersistenceErrors>();
 services.AddScoped<ITokenService, TestToken>(); services.AddScoped<IVoucherStorage, TestStorage>();
 services.AddScoped<IPdfCertificateService, TestPdf>();
+services.AddSingleton<IDocumentStorage,ForensicEdu.Infrastructure.Documents.RustFsDocumentStorage>();services.AddSingleton<IDocumentProcessor,ForensicEdu.Infrastructure.Documents.OfficeDocumentProcessor>();services.Configure<RustFsOptions>(_=>{});
+services.AddSingleton<IImageStorage,TestImageStorage>();services.AddSingleton<IImageProcessor,WebImageProcessor>();
 using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 using var scope = provider.CreateScope(); var sender = scope.ServiceProvider.GetRequiredService<ISender>();
 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -86,6 +95,21 @@ Check((await sender.Send(new SettingsSetCommand("ExamRetakeWaitHours", new Setti
 using var canceled = new CancellationTokenSource(); canceled.Cancel();
 try { await sender.Send(new CoursesGetByIdQuery(course.Id), canceled.Token); throw new Exception("No se respetó cancelación"); }
 catch (OperationCanceledException) { Console.WriteLine("OK: MediatR propaga cancelación"); }
+await Reject(new UploadImageCommand(Array.Empty<byte>()),"Subida vacía rechazada por el pipeline");
+await Reject(new UploadImageCommand(new byte[5242881]),"Límite de 5 MB validado en Application");
+await Reject(new GetImageQuery("../voucher"),"Lectura de imágenes rechaza rutas arbitrarias");
+Check((await sender.Send(new UploadImageCommand(System.Text.Encoding.UTF8.GetBytes("archivo falso")))).Outcome==ResultOutcome.Invalid,"Contenido falso rechazado sin subirlo");
+using(var bitmap=new SkiaSharp.SKBitmap(2500,100)){
+ bitmap.Erase(SkiaSharp.SKColors.Teal);using var raw=SkiaSharp.SKImage.FromBitmap(bitmap);using var png=raw.Encode(SkiaSharp.SKEncodedImageFormat.Png,100);
+ var uploaded=await sender.Send(new UploadImageCommand(png.ToArray()));Check(uploaded.Outcome==ResultOutcome.Success,"La subida válida pasa por procesamiento y almacenamiento");
+ var result=JsonSerializer.SerializeToElement(uploaded.Value);var imageId=result.GetProperty("id").GetString()!;
+ var fetched=await sender.Send(new GetImageQuery(imageId));var content=(DownloadContent)fetched.Value!;
+ using var normalized=SkiaSharp.SKBitmap.Decode(content.Bytes);Check(normalized.Width==1920&&normalized.Height<=1920&&content.ContentType=="image/webp","Imagen normalizada a WebP y limitada a 1920 píxeles");
+ Check(result.GetProperty("url").GetString()=="/api/media/images/"+imageId,"La URL guardada no expira ni contiene credenciales");
+ var imageStore=(TestImageStorage)scope.ServiceProvider.GetRequiredService<IImageStorage>();imageStore.Fail=true;
+ Check((await sender.Send(new UploadImageCommand(png.ToArray()))).Outcome==ResultOutcome.Unavailable,"Fallo del almacenamiento no informa un éxito de subida");imageStore.Fail=false;
+}
+Check((await sender.Send(new GetImageQuery(Guid.NewGuid().ToString("N")))).Outcome==ResultOutcome.NotFound,"Imagen inexistente devuelve NotFound");
 Console.WriteLine("Todas las comprobaciones de arquitectura y casos de uso finalizaron correctamente. No se utilizó PostgreSQL remoto.");
 
 sealed class TestUser : ICurrentUser { public string UserId { get; set; } = "test"; public bool IsInRole(string role) => role == "1"; }
@@ -94,3 +118,11 @@ sealed class TestStorage : IVoucherStorage { public Task<DownloadContent?> ReadA
 sealed class TestPdf : IPdfCertificateService {
     public Task<byte[]> GenerateCertificatePdfAsync(string name, string dni, string title, int hours, string code, string url, DateTime issued, decimal grade, CancellationToken cancellationToken = default) => Task.FromResult(Array.Empty<byte>());
 }
+
+sealed class TestImageStorage:IImageStorage {
+ private readonly Dictionary<string,byte[]> images=new();public bool Fail{get;set;}
+ public Task SaveAsync(string id,byte[] bytes,CancellationToken ct){if(Fail)throw new IOException("Fallo de prueba");images[id]=bytes;return Task.CompletedTask;}
+ public Task<byte[]?> ReadAsync(string id,CancellationToken ct)=>Task.FromResult(images.GetValueOrDefault(id));
+}
+
+sealed class DisabledGoogle:IGoogleIdentityValidator{public bool Enabled=>false;public Task<GoogleIdentity?> ValidateAsync(string credential,string nonce,CancellationToken ct)=>Task.FromResult<GoogleIdentity?>(null);}

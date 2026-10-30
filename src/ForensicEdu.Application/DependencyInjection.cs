@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddMediatR(config => {
             config.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
             config.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            config.AddOpenBehavior(typeof(DatabaseResilienceBehavior<,>));
         });
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddScoped<IAntifraudService, AntifraudService>();

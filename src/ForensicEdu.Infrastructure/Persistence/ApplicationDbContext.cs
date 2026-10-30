@@ -39,6 +39,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.Username).HasMaxLength(50);
+            entity.HasIndex(e => e.Username).IsUnique();
+            entity.Property(e => e.GoogleSubject).HasMaxLength(255);
+            entity.HasIndex(e => e.GoogleSubject).IsUnique();
             entity.HasIndex(e => e.Dni);
             entity.Property(e => e.FullName).HasMaxLength(200).IsRequired();
             entity.Property(e => e.Email).HasMaxLength(200).IsRequired();

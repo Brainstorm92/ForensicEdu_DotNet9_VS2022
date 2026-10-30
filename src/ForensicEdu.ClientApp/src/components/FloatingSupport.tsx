@@ -20,12 +20,14 @@ export const FloatingSupport: React.FC = () => {
   const [ticketMessage, setTicketMessage] = useState('');
   const [ticketSubmitted, setTicketSubmitted] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ticketSubject.trim() || !ticketMessage.trim()) return;
 
-    const created = createTicket(ticketSubject, ticketCategory, ticketMessage);
+    try {
+    const created = await createTicket(ticketSubject, ticketCategory, ticketMessage);
     setTicketSubmitted(created.ticketCode);
+    } catch { return; }
     setTicketSubject('');
     setTicketMessage('');
   };

@@ -33,9 +33,9 @@ export const CatalogSection: React.FC = () => {
 
   const [courseDetailsModal, setCourseDetailsModal] = useState<Course | null>(null);
 
-  const filteredCourses = courses.filter(c =>
+  const filteredCourses = courses.filter(c => c.isPublished !== false && c.isActive !== false && (
     c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.shortDescription.toLowerCase().includes(searchQuery.toLowerCase())
+    c.shortDescription.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const filteredEvents = events.filter(e =>
@@ -60,14 +60,14 @@ export const CatalogSection: React.FC = () => {
             Ciencia, formación y precisión forense
           </h1>
           <p className="text-muted text-sm sm:text-base leading-relaxed">
-            Explora las 8 especialidades periciales, congresos y seminarios en vivo, y asesorías personalizadas en juicio oral. Cuentas con aula virtual con streaming protegido, exámenes cronometrados de 10 min y diplomas verificables.
+            Explora las especialidades disponibles, congresos y seminarios en vivo, y asesorías personalizadas en juicio oral. Cuentas con aula virtual con streaming protegido, exámenes cronometrados de 10 min y diplomas verificables.
           </p>
 
           {/* Quick Stats */}
           <div className="pt-2 flex flex-wrap gap-6 text-xs text-muted">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-              <span>8 Especialidades Forenses</span>
+              <span>Especialidades disponibles</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-700" />
@@ -162,6 +162,7 @@ export const CatalogSection: React.FC = () => {
               return (
                 <div
                   key={course.id}
+                  data-course-id={course.id}
                   className="bg-panel border border-line hover:border-line rounded-2xl overflow-hidden flex flex-col group transition-all duration-200 hover:-translate-y-1 shadow-lg"
                 >
                   {/* Banner */}
@@ -230,7 +231,7 @@ export const CatalogSection: React.FC = () => {
                           </button>
                         ) : (
                           <button
-                            onClick={() => setSelectedProduct({ item: course, type: 'curso' })}
+                            data-testid={`buy-${course.id}`} onClick={() => setSelectedProduct({ item: course, type: 'curso' })}
                             className="py-2 px-3 rounded-xl bg-brand hover:bg-brand text-ink text-xs font-bold transition-colors flex items-center gap-1 shadow-md shadow-brand/20"
                           >
                             <span>Comprar</span>
@@ -321,7 +322,7 @@ export const CatalogSection: React.FC = () => {
       )}
 
       {/* SECTION 6: ASESORÍA PERSONALIZADA */}
-      {(activeFilter === 'all' || activeFilter === 'asesoria') && (
+      {advisory.id && (activeFilter === 'all' || activeFilter === 'asesoria') && (
         <section className="pt-4">
           <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-panel via-emerald-950/40 to-panel border border-emerald-200/60 shadow-xl relative overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
@@ -382,7 +383,7 @@ export const CatalogSection: React.FC = () => {
               <div>
                 <span className="text-xs font-mono font-bold text-brand">{courseDetailsModal.code}</span>
                 <h3 className="text-xl font-bold text-ink mt-1">{courseDetailsModal.title}</h3>
-                <p className="text-xs text-muted">{courseDetailsModal.instructorTitle}</p>
+                <div className="flex items-center gap-3 mt-3">{courseDetailsModal.instructorImageUrl&&<img src={courseDetailsModal.instructorImageUrl} alt={courseDetailsModal.instructor} className="w-12 h-12 rounded-full object-cover"/>}<div><p className="text-sm font-semibold">{courseDetailsModal.instructor}</p><p className="text-xs text-muted">{courseDetailsModal.instructorTitle}</p></div></div>
               </div>
               <button
                 onClick={() => setCourseDetailsModal(null)}

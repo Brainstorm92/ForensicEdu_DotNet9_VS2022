@@ -13,7 +13,8 @@ public static class TokenAccountGuard
         var role=context.Principal?.FindFirstValue(ClaimTypes.Role);
         if(string.IsNullOrWhiteSpace(id)){context.Fail("Identidad inválida.");return;}
         var db=context.HttpContext.RequestServices.GetRequiredService<IApplicationDbContext>();
-        var account=await db.Users.AsNoTracking().Where(x=>x.Id==id).Select(x=>new {x.Role,x.Status,x.ValidUntil}).FirstOrDefaultAsync(context.HttpContext.RequestAborted);
+        var resilience=context.HttpContext.RequestServices.GetRequiredService<IDatabaseResilience>();
+        var account=await resilience.ExecuteAsync(ct=>db.Users.AsNoTracking().Where(x=>x.Id==id).Select(x=>new {x.Role,x.Status,x.ValidUntil}).FirstOrDefaultAsync(ct),context.HttpContext.RequestAborted);
         if(account==null || role!=((int)account.Role).ToString(System.Globalization.CultureInfo.InvariantCulture) ||
             account.Status is AccountStatus.SUSPENDIDO or AccountStatus.ELIMINADO or AccountStatus.PENDIENTE_DE_ELIMINACION or AccountStatus.VENCIDA ||
             account.ValidUntil<=DateTime.UtcNow)

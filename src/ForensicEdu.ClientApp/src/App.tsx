@@ -1,3 +1,4 @@
+import { DataStatus } from './components/DataStatus';
 import React from 'react';
 import { AccountAccess } from './components/AccountAccess';
 import { AppProvider, useApp } from './context/AppContext';
@@ -34,6 +35,7 @@ export default function App() {
       <div className="min-h-screen bg-canvas text-ink flex flex-col font-sans selection:bg-brand selection:text-ink">
         <AccountAccess />
         <Header />
+        <DataStatus />
         <div className="flex-1">
           <MainContent />
         </div>

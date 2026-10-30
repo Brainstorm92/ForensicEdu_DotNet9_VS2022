@@ -35,8 +35,8 @@ El puerto 3000 solo se utiliza si ejecutas Vite con `npm run dev` para desarroll
 ForensicEdu.sln                 Solución de Visual Studio
 src/
   ForensicEdu.Domain/          Entidades y estados de negocio
-    Entities/DomainEntities.cs
-    Enums/DomainEnums.cs
+    Entities/User.cs y otras entidades por archivo
+    Enums/ con un tipo por archivo
   ForensicEdu.Application/     Casos de uso MediatR, validación y contratos
     Common/Interfaces/        Acceso abstracto a datos y servicios
     Services/                 Evaluación, antifraude, vigencia
@@ -71,7 +71,7 @@ compose.yaml                   PostgreSQL local opcional con Docker
 
 ## Cómo leer el código
 
-Empieza por `DomainEntities.cs`: define usuario, producto, orden, pago, matrícula, intento y certificado. Luego lee `OrdersController` para entender cómo entra una solicitud. El controlador usa `ISender`; el handler correspondiente usa `IApplicationDbContext`, cuya implementación es `ApplicationDbContext`. EF Core traduce las consultas C# a PostgreSQL. Los servicios de Application ejecutan las reglas compartidas. Finalmente, lee `AppContext.tsx` y sus consumidores para ver cómo la interfaz representa los procesos.
+Empieza por `Entities/User.cs` y las demás entidades: define usuario, producto, orden, pago, matrícula, intento y certificado. Luego lee `OrdersController` para entender cómo entra una solicitud. El controlador usa `ISender`; el handler correspondiente usa `IApplicationDbContext`, cuya implementación es `ApplicationDbContext`. EF Core traduce las consultas C# a PostgreSQL. Los servicios de Application ejecutan las reglas compartidas. Finalmente, lee `AppContext.tsx` y sus consumidores para ver cómo la interfaz representa los procesos.
 
 Las referencias son: Domain no depende de las otras capas; Application depende de Domain; Infrastructure implementa contratos de Application; WebApi configura y reúne las capas. React es un cliente independiente que se compila a HTML, CSS y JavaScript.
 
@@ -103,7 +103,7 @@ Si prefieres Docker, instala Docker Desktop, define `POSTGRES_PASSWORD` en `.env
 
 Si Visual Studio no encuentra los secretos de usuario, WebApi carga explícitamente `appsettings.Local.json` desde la carpeta del proyecto en Development. Se configuró ese archivo local con la conexión proporcionada. Está excluido del repositorio, de la copia al directorio de salida y de la publicación. No compartirlo. Las variables de entorno y los argumentos de inicio tienen precedencia. En producción no se carga ese archivo y deben configurarse las variables de conexión correspondientes.
 
-Comprueba la conexión con `/api/health/database` (solo Development). Debe indicar `connected: true` y la base remota esperada. Si falta toda configuración, el arranque falla con un mensaje explícito en lugar de utilizar PostgreSQL local o guardar información en memoria. Los errores transitorios de conexión tienen hasta tres reintentos y devuelven HTTP 503 si no se recuperan.
+Comprueba la conexión con `/api/health/database` (solo Development). Debe indicar `connected: true` y la base remota esperada. Si falta toda configuración, el arranque falla con un mensaje explícito en lugar de utilizar PostgreSQL local o guardar información en memoria. Los fallos transitorios repetidos abren un circuit breaker Polly y devuelven HTTP 503 con Retry-After. No se reintentan automáticamente las escrituras.
 
 Login verifica BCrypt y entrega un JWT de 8 horas. Envía `Authorization: Bearer TOKEN` en las solicitudes protegidas. En Development se genera una clave temporal: reiniciar invalida las sesiones. En producción debes establecer `JwtSettings__Secret` con una clave aleatoria de al menos 32 caracteres. No publicar claves en el repositorio.
 

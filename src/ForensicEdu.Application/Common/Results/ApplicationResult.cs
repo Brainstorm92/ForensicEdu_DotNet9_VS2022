@@ -1,9 +1,5 @@
 namespace ForensicEdu.Application.Common.Results;
 
-public enum ResultOutcome { Success, Invalid, NotFound, Forbidden, Unauthorized, Conflict, Unavailable, NoContent, Download }
-public sealed record DownloadContent(byte[] Bytes, string ContentType, string FileName);
-
-// Application outcomes are transport independent. HTTP mapping belongs to WebApi.
 public sealed record ApplicationResult(ResultOutcome Outcome, object? Value = null)
 {
     public static ApplicationResult Success(object? value = null) => new(ResultOutcome.Success, value);

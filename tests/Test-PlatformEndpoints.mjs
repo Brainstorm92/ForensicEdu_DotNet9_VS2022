@@ -27,7 +27,7 @@ const password='Test-'+randomBytes(16).toString('hex');
 const env={...process.env,ASPNETCORE_ENVIRONMENT:'Development',DOTNET_ENVIRONMENT:'Development',ASPNETCORE_URLS:origin,
   DatabaseProvider:'PostgreSQL',ConnectionStrings__DefaultConnection:`Host=127.0.0.1;Port=${pgPort};Database=${dbName};Username=postgres`,
   JwtSettings__Secret:randomBytes(64).toString('base64'),JwtSettings__Issuer:'ForensicEduApi',JwtSettings__Audience:'ForensicEduApp',
-  BootstrapAdmin__Email:'admin@example.invalid',BootstrapAdmin__Password:password};
+  BootstrapAdmin__Email:'admin@example.invalid',BootstrapAdmin__Password:password,Authentication__Google__Enabled:'true',Authentication__Google__ClientId:'fixture.apps.googleusercontent.com'};
 execute('dotnet',[dll,'--bootstrap-admin','--contentRoot',work],{env,cwd:work});
 const bootstrapAgain=spawnSync('dotnet',[dll,'--bootstrap-admin','--contentRoot',work],{env,cwd:work,windowsHide:true,encoding:'utf8'});
 if(bootstrapAgain.status===0)throw new Error('Bootstrap permitió crear otro administrador');
@@ -51,9 +51,16 @@ try {
   let ready=false;
   for(let i=0;i<150;i++){try {await fetch(origin+'/scalar/v1');ready=true;break;}catch{} if(server.exitCode!==null)throw new Error(logs);await new Promise(r=>setTimeout(r,100));}
   if(!ready)throw new Error('API no inició: '+logs);
+  const googleConfigResponse=await fetch(origin+'/api/auth/google/config');const googleConfig=await googleConfigResponse.json();
+  check(googleConfig.enabled&&googleConfig.clientId==='fixture.apps.googleusercontent.com'&&googleConfig.nonce.length===64,'Configuración pública de Google incorrecta');
+  check(googleConfigResponse.headers.get('cache-control')==='no-store','El nonce Google no debe cachearse');
+  const nonceCookie=googleConfigResponse.headers.get('set-cookie');check(nonceCookie?.includes('httponly'),'La cookie nonce debe ser HttpOnly');
+  await post('/api/auth/google',{credential:'no-es-un-token'},undefined,401);
+  const invalidGoogle=await fetch(origin+'/api/auth/google',{method:'POST',headers:{'Content-Type':'application/json','Cookie':nonceCookie.split(';')[0]},body:JSON.stringify({credential:'no-es-un-token'})});
+  check(invalidGoogle.status===401,'La API aceptó una credencial Google inválida');count+=2;console.log('OK: configuración Google sin caché, nonce HttpOnly y rechazo de credencial o sesión inválidas.');
   const schema=await get('/openapi/v1.json');check(schema.components.securitySchemes.Bearer,'Falta Bearer en OpenAPI');
   const declared=JSON.parse(await readFile(path.join(root,'ENDPOINTS_IMPLEMENTADOS.json'),'utf8'));
-  for(const endpoint of declared){const base=endpoint.group==='PublicCatalog'?'api':endpoint.group==='AccountManagement'?'api/auth':endpoint.group==='StudentWorkspace'?'api/student':'api/admin';
+  for(const endpoint of declared){const base=endpoint.group==='GoogleAuth'?'api/auth':endpoint.group==='Media'?(endpoint.name==='GetImage'?'api/media':'api/admin'):endpoint.group==='PublicCatalog'?'api':endpoint.group==='AccountManagement'?'api/auth':endpoint.group==='StudentWorkspace'?'api/student':'api/admin';
     const wanted='/'+base+'/'+endpoint.route;const actual=Object.keys(schema.paths).find(p=>p.toLowerCase()===wanted.toLowerCase());
     check(actual && schema.paths[actual][endpoint.verb.toLowerCase()],`Falta endpoint en OpenAPI: ${wanted}`);}
   const admin=(await post('/api/auth/login',{email:env.BootstrapAdmin__Email,password})).token;
@@ -62,6 +69,15 @@ try {
   const studentAccount=await register('student@example.invalid','10000001');const otherAccount=await register('other@example.invalid','10000002');
   const student=(await post('/api/auth/login',{email:'student@example.invalid',password})).token;
   const other=(await post('/api/auth/login',{email:'other@example.invalid',password})).token;
+  const operatorInput={nombres:'Operador',apellidos:'Prueba',email:'operator-api@example.invalid',password,role:2,validDays:180};
+  await post('/api/admin/users',operatorInput,student,403);
+  await post('/api/admin/users',{...operatorInput,password:'corta'},admin,400);
+  await post('/api/admin/users',{...operatorInput,role:99},admin,400);
+  await post('/api/admin/users',operatorInput,admin);
+  await post('/api/admin/users',operatorInput,admin,409);
+  const operator=(await post('/api/auth/login',{email:operatorInput.email,password})).token;
+  await get('/api/admin/courses',operator);
+  await post('/api/admin/users',{...operatorInput,email:'forbidden@example.invalid'},operator,403);
   await call('GET','/api/admin/courses',{token:student,status:403});await call('GET','/api/admin/users',{status:401});
   await call('GET','/api/admin/courses?page=0',{token:admin,status:400});
   await get('/api/admin/users',admin);await get('/api/admin/users/'+studentAccount.userId,admin);
@@ -106,6 +122,7 @@ try {
   const unused=await post('/api/admin/advisories',{...advisoryInput,title:'Sin ventas'},admin);await remove('/api/admin/advisories/'+unused.id,admin);
   const checkout=async(productId,productType,amount,operation)=>post('/api/orders/checkout',{userId:studentAccount.userId,productId,productType,amount,bankName:'BCP',operationNumber:operation,operationDate:new Date(Date.now()-1000).toISOString(),accountHolderName:'Ana Prueba'},student);
   const order=await checkout(course.id,1,100,'OP1');
+  const sameOrder=await checkout(course.id,1,100,'OP1');check(sameOrder.orderId===order.orderId,'El reintento pendiente duplicó la orden');
   let payments=(await get('/api/admin/payments',admin)).items;const payment=payments.find(p=>p.orderId===order.orderId);
   await get('/api/admin/payments/'+payment.id,admin);await put('/api/admin/payments/'+payment.id+'/review',{status:6,reason:'Adjunte voucher'},admin);
   await call('GET','/api/admin/payments/'+payment.id+'/voucher',{token:admin,status:404});
@@ -118,7 +135,7 @@ try {
   const classroom=await get(`/api/student/enrollments/${enrollment.id}/classroom`,student);check(classroom.modules[0].documents[0].title==='Guía actualizada','Contenido no persistido');
   await call('GET',`/api/student/enrollments/${enrollment.id}/classroom`,{token:support,status:404});
   await get(`/api/student/enrollments/${enrollment.id}/modules/${module.id}/video`,student);
-  await get(`/api/student/enrollments/${enrollment.id}/documents/${doc.id}`,student);
+  await get(`/api/student/enrollments/${enrollment.id}/documents/${doc.id}`,student,503);
   await remove(`/api/admin/courses/${course.id}/modules/${module.id}`,admin,409);
   await put(`/api/student/enrollments/${enrollment.id}/modules/${module.id}/complete`,undefined,student,200);
   const exam=await post(`/api/exam-sessions/${enrollment.id}/start`,undefined,student);

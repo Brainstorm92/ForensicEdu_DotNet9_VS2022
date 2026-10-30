@@ -1,18 +1,19 @@
-export type UserRole = 
-  | 'superadmin' 
-  | 'admin_academico' 
-  | 'admin_financiero' 
-  | 'docente' 
-  | 'soporte' 
-  | 'estudiante' 
+export type UserRole =
+  | 'superadmin'
+  | 'admin_academico'
+  | 'admin_financiero'
+  | 'docente'
+  | 'soporte'
+  | 'estudiante'
   | 'consultor';
 
-export type AccountStatus = 
-  | 'REGISTRADA' 
-  | 'ACTIVA' 
-  | 'PRÓXIMA_A_VENCER' 
-  | 'VENCIDA' 
-  | 'PENDIENTE_DE_ELIMINACIÓN' 
+export type AccountStatus =
+  | 'REGISTRADA'
+  | 'ACTIVA'
+  | 'PRÓXIMA_A_VENCER'
+  | 'VENCIDA'
+  | 'SUSPENDIDA'
+  | 'PENDIENTE_DE_ELIMINACIÓN'
   | 'ELIMINADA';
 
 export interface UserProfile {
@@ -38,6 +39,8 @@ export interface UserProfile {
 export type ProductType = 'curso' | 'evento' | 'asesoria';
 
 export interface Course {
+  isPublished?: boolean;
+  isActive?: boolean;
   id: string;
   code: string;
   title: string;
@@ -48,6 +51,7 @@ export interface Course {
   durationHours: number;
   instructor: string;
   instructorTitle: string;
+  instructorImageUrl?: string;
   modalidad: 'Virtual Asincrónico' | 'Virtual Híbrido';
   requisitos: string;
   materialesIncluidos: string[];
@@ -116,15 +120,16 @@ export interface Order {
   paymentId?: string;
 }
 
-export type PaymentStatus = 
-  | 'PENDIENTE' 
-  | 'EN_REVISIÓN' 
-  | 'APROBADO' 
-  | 'RECHAZADO' 
-  | 'DUPLICADO' 
+export type PaymentStatus =
+  | 'PENDIENTE'
+  | 'EN_REVISIÓN'
+  | 'APROBADO'
+  | 'RECHAZADO'
+  | 'DUPLICADO'
   | 'OBSERVADO';
 
 export interface Payment {
+  hasVoucher?: boolean;
   id: string;
   orderId: string;
   orderCode: string;
@@ -238,7 +243,7 @@ export interface AuditLogItem {
   userId: string;
   userName: string;
   userRole: UserRole;
-  action: 
+  action:
     | 'LOGIN'
     | 'CREAR_ORDEN'
     | 'REGISTRAR_PAGO'

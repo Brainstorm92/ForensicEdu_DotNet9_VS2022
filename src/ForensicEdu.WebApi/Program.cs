@@ -1,3 +1,4 @@
+using ForensicEdu.Infrastructure.Secrets;
 using ForensicEdu.WebApi.Common;
 using ForensicEdu.WebApi.Services;
 using ForensicEdu.Application.Common.Interfaces;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Scalar.AspNetCore;
 
-var startupArgs=args.Where(x=>x!="--bootstrap-admin").ToArray();
+var startupArgs=args.Where(x=>x!="--bootstrap-admin" && x!="--seed-demo" && x!="--provision-admin" && x!="--upgrade-media" && x!="--upgrade-google").ToArray();
 var builder = WebApplication.CreateBuilder(startupArgs);
 if (builder.Environment.IsDevelopment())
 {
@@ -19,6 +20,12 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddEnvironmentVariables();
     builder.Configuration.AddCommandLine(startupArgs);
 }
+
+// Load KV v2 before database, storage and Google registrations. Fail closed if enabled.
+await builder.Configuration.AddOpenBaoSecretsAsync();
+// Explicit deployment overrides remain higher priority than the stored JSON.
+builder.Configuration.AddEnvironmentVariables();
+builder.Configuration.AddCommandLine(startupArgs);
 
 // Add services to the container
 builder.Services.AddControllers();
@@ -86,6 +93,31 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+if(args.Contains("--upgrade-google"))
+{
+    using var scope=app.Services.CreateScope();
+    var database=scope.ServiceProvider.GetRequiredService<ForensicEdu.Infrastructure.Persistence.ApplicationDbContext>();
+    await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRawAsync(database.Database,
+        "ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"GoogleSubject\" character varying(255) NULL; CREATE UNIQUE INDEX IF NOT EXISTS \"IX_Users_GoogleSubject\" ON \"Users\" (\"GoogleSubject\");");
+    Console.WriteLine("Acceso con Google preparado. No se modificaron cuentas existentes.");return;
+}
+if(args.Contains("--upgrade-media"))
+{
+    using var scope=app.Services.CreateScope();
+    var database=scope.ServiceProvider.GetRequiredService<ForensicEdu.Infrastructure.Persistence.ApplicationDbContext>();
+    await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRawAsync(database.Database,
+        "ALTER TABLE \"Courses\" ADD COLUMN IF NOT EXISTS \"InstructorImageUrl\" text NOT NULL DEFAULT ''; ");
+    Console.WriteLine("Esquema de imágenes actualizado. Se conservaron los registros existentes.");return;
+}
+if(args.Contains("--provision-admin"))
+{
+    using var scope=app.Services.CreateScope();
+    var database=scope.ServiceProvider.GetRequiredService<ForensicEdu.Infrastructure.Persistence.ApplicationDbContext>();
+    await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRawAsync(database.Database,
+        "ALTER TABLE \"Users\" ADD COLUMN IF NOT EXISTS \"Username\" character varying(50) NULL; CREATE UNIQUE INDEX IF NOT EXISTS \"IX_Users_Username\" ON \"Users\" (\"Username\");");
+    await ForensicEdu.Infrastructure.Services.AdministratorProvisioner.CreateAsync(database,scope.ServiceProvider.GetRequiredService<IPasswordService>(),builder.Configuration["AdminProvision:Username"],builder.Configuration["AdminProvision:Password"]);
+    return;
+}
 if(args.Contains("--bootstrap-admin"))
 {
     using var scope=app.Services.CreateScope();
@@ -93,6 +125,14 @@ if(args.Contains("--bootstrap-admin"))
         scope.ServiceProvider.GetRequiredService<IApplicationDbContext>(),scope.ServiceProvider.GetRequiredService<IPasswordService>(),
         builder.Configuration["BootstrapAdmin:Email"],builder.Configuration["BootstrapAdmin:Password"]);
     Console.WriteLine("Primer administrador creado. Inicie sesión mediante /api/auth/login.");
+    return;
+}
+if(args.Contains("--seed-demo"))
+{
+    if(!app.Environment.IsDevelopment())throw new InvalidOperationException("Los datos de prueba solo se generan en Development.");
+    using var scope=app.Services.CreateScope();
+    var added=await scope.ServiceProvider.GetRequiredService<ForensicEdu.Infrastructure.Persistence.DevelopmentDataSeeder>().SeedAsync();
+    Console.WriteLine($"Productos de prueba añadidos: {added}. No se modificaron usuarios, pagos ni registros existentes.");
     return;
 }
 app.UseExceptionHandler();

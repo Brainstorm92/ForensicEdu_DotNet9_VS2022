@@ -398,5 +398,61 @@
     "verb": "Get",
     "route": "certificates",
     "role": "1,2"
+  },
+  {
+    "group": "OperationsAdmin",
+    "name": "CreateUser",
+    "request": "CreateUserCommand",
+    "verb": "Post",
+    "route": "users",
+    "role": "1"
+  },
+  {
+    "group": "Media",
+    "name": "UploadImage",
+    "request": "UploadImageCommand",
+    "verb": "Post",
+    "route": "media/images",
+    "role": "1,2"
+  },
+  {
+    "group": "Media",
+    "name": "GetImage",
+    "request": "GetImageQuery",
+    "verb": "Get",
+    "route": "images/{id}",
+    "role": null
+  },
+  {
+    "group": "GoogleAuth",
+    "name": "GoogleSignIn",
+    "request": "GoogleSignInCommand",
+    "verb": "Post",
+    "route": "google",
+    "role": null
+  },
+  {
+    "group": "GoogleAuth",
+    "name": "GoogleConfig",
+    "request": null,
+    "verb": "Get",
+    "route": "google/config",
+    "role": null
+  },
+  {
+    "group": "ProtectedDocuments",
+    "name": "UploadCourseDocument",
+    "request": "UploadCourseDocumentCommand",
+    "verb": "Post",
+    "route": "admin/courses/{courseId}/modules/{moduleId}/documents/upload",
+    "role": "1,2"
+  },
+  {
+    "group": "ProtectedDocuments",
+    "name": "GetProtectedDocument",
+    "request": "GetProtectedDocumentQuery",
+    "verb": "Get",
+    "route": "student/enrollments/{enrollmentId}/documents/{documentId}/content",
+    "role": "Authenticated"
   }
 ]
