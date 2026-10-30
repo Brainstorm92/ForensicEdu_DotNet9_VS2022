@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.1738743">
+  <PropertyGroup>
+    <StartupCommand>npm run dev</StartupCommand>
+    <JavaScriptTestRoot>src\</JavaScriptTestRoot>
+    <!-- Permite que Visual Studio 2022 lance Vite con Hot Reload -->
+    <ShouldRunBuildScript>false</ShouldRunBuildScript>
+    <!-- Carpeta donde se genera el build de produccion si se requiere -->
+    <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
+  </PropertyGroup>
+</Project>

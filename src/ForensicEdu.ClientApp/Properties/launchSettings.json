@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "Vite (Navegador)": {
+      "commandName": "Project",
+      "launchBrowser": true
+    }
+  }
+}

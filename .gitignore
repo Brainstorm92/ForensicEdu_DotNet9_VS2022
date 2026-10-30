@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+src/ForensicEdu.WebApi/wwwroot/
+src/ForensicEdu.WebApi/App_Data/
+.artifacts/
+.vs/
+.env
+**/appsettings.Local.json
+*.user
+**/*.zip
+**/.env.*
+!**/.env.example
+**/*.pfx
+**/*.key

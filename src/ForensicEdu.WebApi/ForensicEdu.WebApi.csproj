@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ForensicEdu.WebApi</RootNamespace>
+    <UserSecretsId>ForensicEdu-Local-Development</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.Local.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    <ProjectReference Include="..\ForensicEdu.Domain\ForensicEdu.Domain.csproj" />
+    <ProjectReference Include="..\ForensicEdu.Application\ForensicEdu.Application.csproj" />
+    <ProjectReference Include="..\ForensicEdu.Infrastructure\ForensicEdu.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.0.2" />
+  </ItemGroup>
+  <Target Name="BuildInteractiveClient" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\..\ForensicEdu.ClientApp" Command="npm install" Condition="!Exists('$(MSBuildProjectDirectory)\..\ForensicEdu.ClientApp\node_modules\vite\bin\vite.js')" />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)\..\ForensicEdu.ClientApp" Command="npm run build" />
+    <ItemGroup>
+      <InteractiveClientFiles Include="$(MSBuildProjectDirectory)\..\ForensicEdu.ClientApp\dist\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(InteractiveClientFiles)" DestinationFiles="@(InteractiveClientFiles->'$(MSBuildProjectDirectory)\wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <Content Remove="wwwroot\**\*" />
+      <Content Include="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+</Project>
