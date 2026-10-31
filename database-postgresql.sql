@@ -340,3 +340,14 @@ CREATE INDEX "IX_Users_Dni" ON "Users" ("Dni");
 CREATE UNIQUE INDEX "IX_Users_Email" ON "Users" ("Email");
 
 
+
+-- ActualizaciÃ³n aditiva. Ejecutar antes de iniciar la versiÃ³n con usuarios de acceso.
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "Username" character varying(50) NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS "IX_Users_Username" ON "Users" ("Username");
+
+-- Cambio aditivo: conserva cursos, matrÃ­culas e imÃ¡genes existentes.
+ALTER TABLE "Courses" ADD COLUMN IF NOT EXISTS "InstructorImageUrl" text NOT NULL DEFAULT '';
+
+-- Cambio aditivo. No vincula ni modifica identidades existentes.
+ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "GoogleSubject" character varying(255) NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS "IX_Users_GoogleSubject" ON "Users" ("GoogleSubject");

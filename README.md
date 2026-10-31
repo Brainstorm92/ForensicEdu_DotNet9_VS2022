@@ -44,6 +44,6 @@ npm install
 
 ### 4. Presionar F5
 Al presionar **F5**:
-- Con el perfil `http`, la aplicación completa se abre en `http://localhost:5000`. La documentación de la API está en `/scalar/v1`.
+- Con el perfil `http`, la documentación de la API se abre en `http://localhost:5000/scalar/v1`; la interfaz está en `http://localhost:5000/app/`. La documentación de la API está en `/scalar/v1`.
 - WebApi ejecuta `npm run build` y sirve la interfaz desde `wwwroot`; no es necesario mantener Vite ni el depurador JavaScript activos. Recompila para ver cambios en React.
 - Para trabajar con Hot Reload de React, puedes ejecutar `npm run dev` en ClientApp y abrir `http://localhost:3000`, manteniendo WebApi activo en el puerto 5000.

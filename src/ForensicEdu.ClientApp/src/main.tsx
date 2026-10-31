@@ -1,6 +1,7 @@
+import { ThemeProvider } from './context/ThemeContext';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { AuthProvider } from './context/AuthContext';
 
-createRoot(document.getElementById('root')!).render(<AuthProvider><App /></AuthProvider>);
+createRoot(document.getElementById('root')!).render(<ThemeProvider><AuthProvider><App /></AuthProvider></ThemeProvider>);

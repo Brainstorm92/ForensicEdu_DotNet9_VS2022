@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { 
-  FileCheck, 
-  ShieldAlert, 
-  Clock, 
-  Award, 
-  CreditCard, 
-  RefreshCw, 
-  Eye, 
-  ExternalLink, 
-  CheckCircle, 
+import {
+  FileCheck,
+  ShieldAlert,
+  Clock,
+  Award,
+  CreditCard,
+  RefreshCw,
+  Eye,
+  ExternalLink,
+  CheckCircle,
   AlertTriangle,
   ZoomIn,
   Sparkles,
@@ -26,7 +26,7 @@ export const ClientReviewGuide: React.FC = () => {
   const handleTestDuplicatePayment = () => {
     // Generate an order or use first pending order
     const pendingOrder = orders.find(o => o.status === 'PENDIENTE_DE_PAGO') || orders[0];
-    
+
     // Attempt to register payment with the EXACT operation number that is already approved: '0049281726' (BCP)
     const result = registerPayment(pendingOrder.id, {
       banco: 'BCP',
@@ -80,27 +80,27 @@ export const ClientReviewGuide: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in fade-in duration-300">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950/80 to-slate-900 border border-indigo-700/60 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-panel via-indigo-950/80 to-panel border border-indigo-200/60 rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative z-10 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-300 text-xs font-semibold">
-            <FileCheck className="w-4 h-4 text-amber-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/15 border border-brand/40 text-brand text-xs font-semibold">
+            <FileCheck className="w-4 h-4 text-brand" />
             <span>Auditoría Técnica y Revisión del Requerimiento del Cliente</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">
             Análisis Integral de Cambios: Flujo de Procesos Plataforma Educativa (v5 - Francisco)
           </h1>
 
-          <p className="text-slate-300 text-sm sm:text-base max-w-4xl leading-relaxed">
-            Hemos procesado en su totalidad los archivos entregados por el cliente (<span className="text-amber-300 font-mono">Flujo_Procesos_Plataforma_Educativa_Francisco_v5.docx</span> y su versión editable PDF). La plataforma que estás navegando implementa fielmente el 100% de las reglas de negocio, controles antifraude, modelo de evaluación, certificación QR y arquitectura descritas.
+          <p className="text-muted text-sm sm:text-base max-w-4xl leading-relaxed">
+            Hemos procesado en su totalidad los archivos entregados por el cliente (<span className="text-brand font-mono">Flujo_Procesos_Plataforma_Educativa_Francisco_v5.docx</span> y su versión editable PDF). La plataforma que estás navegando implementa fielmente el 100% de las reglas de negocio, controles antifraude, modelo de evaluación, certificación QR y arquitectura descritas.
           </p>
 
           {/* Quick Buttons */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={() => setShowDiagramModal(true)}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all shadow-lg shadow-amber-500/20"
+              className="px-4 py-2.5 rounded-xl bg-brand hover:bg-brand text-ink font-bold text-xs sm:text-sm flex items-center gap-2 transition-all shadow-lg shadow-brand/20"
             >
               <ZoomIn className="w-4 h-4" />
               <span>Ver Anexo Gráfico Oficial del Cliente (Diagrama)</span>
@@ -108,17 +108,17 @@ export const ClientReviewGuide: React.FC = () => {
 
             <button
               onClick={() => setActiveTab('admin')}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm border border-slate-700 flex items-center gap-2 transition-colors"
+              className="px-4 py-2.5 rounded-xl bg-surface-low hover:bg-surface-high text-ink font-semibold text-xs sm:text-sm border border-line flex items-center gap-2 transition-colors"
             >
-              <ShieldAlert className="w-4 h-4 text-purple-400" />
+              <ShieldAlert className="w-4 h-4 text-purple-700" />
               <span>Ir al Panel Administrativo y Antifraude</span>
             </button>
 
             <button
               onClick={() => setActiveTab('verificador-publico')}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs sm:text-sm border border-slate-700 flex items-center gap-2 transition-colors"
+              className="px-4 py-2.5 rounded-xl bg-surface-low hover:bg-surface-high text-ink font-semibold text-xs sm:text-sm border border-line flex items-center gap-2 transition-colors"
             >
-              <Award className="w-4 h-4 text-cyan-400" />
+              <Award className="w-4 h-4 text-cyan-700" />
               <span>Probar Validador QR Público</span>
             </button>
           </div>
@@ -127,14 +127,14 @@ export const ClientReviewGuide: React.FC = () => {
 
       {/* Test feedback alert banner */}
       {testResult && (
-        <div className="p-4 rounded-2xl bg-amber-950/60 border border-amber-600/80 text-amber-200 text-sm flex items-start gap-3 shadow-lg">
-          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+        <div className="p-4 rounded-2xl bg-brand/60 border border-brand/80 text-brand text-sm flex items-start gap-3 shadow-lg">
+          <AlertTriangle className="w-5 h-5 text-brand shrink-0 mt-0.5" />
           <div className="flex-1">
             <span className="font-bold">Resultado de la prueba en vivo:</span> {testResult}
           </div>
-          <button 
+          <button
             onClick={() => setTestResult(null)}
-            className="text-amber-400 hover:text-white text-xs font-semibold underline"
+            className="text-brand hover:text-ink text-xs font-semibold underline"
           >
             Cerrar
           </button>
@@ -142,90 +142,90 @@ export const ClientReviewGuide: React.FC = () => {
       )}
 
       {/* Interactive Quick Validation Box: Test key client requirements in 1 click! */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+      <div className="bg-panel border border-line rounded-2xl p-6 space-y-4">
         <div className="flex items-center gap-2.5">
-          <Sparkles className="w-5 h-5 text-amber-400" />
-          <h2 className="text-lg font-bold text-white">Botonera de Demostración de las 5 Reglas Críticas del Cliente</h2>
+          <Sparkles className="w-5 h-5 text-brand" />
+          <h2 className="text-lg font-bold text-ink">Botonera de Demostración de las 5 Reglas Críticas del Cliente</h2>
         </div>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-muted">
           Usa estos controles para demostrar en tiempo real cómo el sistema reacciona ante las reglas clave pedidas por tu cliente:
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-3">
+          <div className="p-4 rounded-xl bg-canvas border border-line flex flex-col justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2 text-rose-400 font-bold text-xs mb-1">
+              <div className="flex items-center gap-2 text-rose-700 font-bold text-xs mb-1">
                 <ShieldAlert className="w-4 h-4" />
                 <span>Regla 9: Antifraude Pagos</span>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Intenta registrar un pago con el número de operación ya aprobado <span className="font-mono text-amber-300">0049281726</span>.
+              <p className="text-[11px] text-muted">
+                Intenta registrar un pago con el número de operación ya aprobado <span className="font-mono text-brand">0049281726</span>.
               </p>
             </div>
             <button
               onClick={handleTestDuplicatePayment}
-              className="w-full py-1.5 px-3 rounded-lg bg-rose-950 hover:bg-rose-900 text-rose-200 border border-rose-800 font-semibold text-xs flex items-center justify-center gap-1.5"
+              className="w-full py-1.5 px-3 rounded-lg bg-rose-50 hover:bg-rose-50 text-rose-700 border border-rose-200 font-semibold text-xs flex items-center justify-center gap-1.5"
             >
               <span>Probar Detección Duplicado</span>
             </button>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-3">
+          <div className="p-4 rounded-xl bg-canvas border border-line flex flex-col justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2 text-amber-400 font-bold text-xs mb-1">
+              <div className="flex items-center gap-2 text-brand font-bold text-xs mb-1">
                 <Clock className="w-4 h-4" />
                 <span>Regla 12: Examen 10m y 13/20</span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-muted">
                 Abre el simulador de evaluación del curso Balística Forense para ver el cronómetro de 10 minutos y la regla 13/20.
               </p>
             </div>
             <button
               onClick={() => setActiveTab('mis-cursos')}
-              className="w-full py-1.5 px-3 rounded-lg bg-amber-950 hover:bg-amber-900 text-amber-200 border border-amber-800 font-semibold text-xs flex items-center justify-center gap-1.5"
+              className="w-full py-1.5 px-3 rounded-lg bg-brand hover:bg-brand text-brand border border-brand font-semibold text-xs flex items-center justify-center gap-1.5"
             >
               <span>Ir a Evaluación en Aula</span>
             </button>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-3">
+          <div className="p-4 rounded-xl bg-canvas border border-line flex flex-col justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs mb-1">
+              <div className="flex items-center gap-2 text-cyan-700 font-bold text-xs mb-1">
                 <Award className="w-4 h-4" />
                 <span>Regla 13: QR y Revocación</span>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Alterna el estado del certificado emitido entre <span className="text-emerald-400 font-bold">VÁLIDO</span> y <span className="text-rose-400 font-bold">REVOCADO</span>.
+              <p className="text-[11px] text-muted">
+                Alterna el estado del certificado emitido entre <span className="text-emerald-700 font-bold">VÁLIDO</span> y <span className="text-rose-700 font-bold">REVOCADO</span>.
               </p>
             </div>
             <button
               onClick={handleTestRevocation}
-              className="w-full py-1.5 px-3 rounded-lg bg-cyan-950 hover:bg-cyan-900 text-cyan-200 border border-cyan-800 font-semibold text-xs flex items-center justify-center gap-1.5"
+              className="w-full py-1.5 px-3 rounded-lg bg-cyan-50 hover:bg-cyan-50 text-cyan-700 border border-cyan-200 font-semibold text-xs flex items-center justify-center gap-1.5"
             >
               <span>Alternar Estado Certificado</span>
             </button>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-3">
+          <div className="p-4 rounded-xl bg-canvas border border-line flex flex-col justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs mb-1">
+              <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs mb-1">
                 <RefreshCw className="w-4 h-4" />
                 <span>Regla 4.3: Vigencia 30d/2a</span>
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-muted">
                 Simula adelantar el tiempo (+25 días) para ver cómo una cuenta sin compra entra en alerta de eliminación.
               </p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => { simulateValidityChange(-20); setTestResult('Se adelantaron 20 días en la cuenta activa.'); }}
-                className="flex-1 py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-[11px]"
+                className="flex-1 py-1.5 px-2 rounded-lg bg-surface-low hover:bg-surface-high text-ink font-medium text-[11px]"
               >
                 -20 días
               </button>
               <button
                 onClick={() => { simulateValidityChange(365); setTestResult('Se sumaron 365 días a la vigencia.'); }}
-                className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-200 border border-emerald-800 font-medium text-[11px]"
+                className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium text-[11px]"
               >
                 +1 año
               </button>
@@ -236,117 +236,117 @@ export const ClientReviewGuide: React.FC = () => {
 
       {/* The 7 Core Architectural Pillars from the Document */}
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-          <Layers className="w-5 h-5 text-amber-400" />
+        <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+          <Layers className="w-5 h-5 text-brand" />
           <span>Los 7 Pilares de Cambio Funcional Definidos por el Cliente (Francisco v5)</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Card 1 */}
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+          <div className="p-5 rounded-2xl bg-panel/90 border border-line space-y-2.5">
+            <div className="w-9 h-9 rounded-xl bg-brand/10 border border-brand/20 text-brand flex items-center justify-center font-bold text-sm">
               1
             </div>
-            <h3 className="font-bold text-sm text-white">Regla de 1 Pago = 1 Producto (Sección 7)</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Cada curso, evento o sesión de asesoría genera una orden interna única (ej: <span className="font-mono text-amber-300">ORD-2026-000125</span>). Un pago bancario corresponde estrictamente a un solo producto y no puede subdividirse ni reutilizarse.
+            <h3 className="font-bold text-sm text-ink">Regla de 1 Pago = 1 Producto (Sección 7)</h3>
+            <p className="text-xs text-muted leading-relaxed">
+              Cada curso, evento o sesión de asesoría genera una orden interna única (ej: <span className="font-mono text-brand">ORD-2026-000125</span>). Un pago bancario corresponde estrictamente a un solo producto y no puede subdividirse ni reutilizarse.
             </p>
           </div>
 
           {/* Card 2 */}
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
-            <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-sm">
+          <div className="p-5 rounded-2xl bg-panel/90 border border-line space-y-2.5">
+            <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 flex items-center justify-center font-bold text-sm">
               2
             </div>
-            <h3 className="font-bold text-sm text-white">Control de Duplicidad y Antifraude (Sección 9)</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Verificación previa en backend mediante huella digital única: <span className="font-mono text-amber-300">banco + num_operación + fecha + monto + titular</span> y hash del voucher. Si coincide con un pago ya APROBADO, se clasifica como DUPLICADO y se bloquea la matrícula.
+            <h3 className="font-bold text-sm text-ink">Control de Duplicidad y Antifraude (Sección 9)</h3>
+            <p className="text-xs text-muted leading-relaxed">
+              Verificación previa en backend mediante huella digital única: <span className="font-mono text-brand">banco + num_operación + fecha + monto + titular</span> y hash del voucher. Si coincide con un pago ya APROBADO, se clasifica como DUPLICADO y se bloquea la matrícula.
             </p>
           </div>
 
           {/* Card 3 */}
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+          <div className="p-5 rounded-2xl bg-panel/90 border border-line space-y-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 flex items-center justify-center font-bold text-sm">
               3
             </div>
-            <h3 className="font-bold text-sm text-white">Vigencia: 30 Días vs 2 Años Renovables (Sección 4.3)</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              La cuenta nueva sin pago aprobado durante 30 días pasa a estado <span className="text-rose-400 font-semibold">PENDIENTE_DE_ELIMINACIÓN</span>. El primer pago aprobado le otorga <span className="text-emerald-400 font-semibold">2 años de vigencia</span>, y cada nueva compra aprobada renueva otros 2 años.
+            <h3 className="font-bold text-sm text-ink">Vigencia: 30 Días vs 2 Años Renovables (Sección 4.3)</h3>
+            <p className="text-xs text-muted leading-relaxed">
+              La cuenta nueva sin pago aprobado durante 30 días pasa a estado <span className="text-rose-700 font-semibold">PENDIENTE_DE_ELIMINACIÓN</span>. El primer pago aprobado le otorga <span className="text-emerald-700 font-semibold">2 años de vigencia</span>, y cada nueva compra aprobada renueva otros 2 años.
             </p>
           </div>
 
           {/* Card 4 */}
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
-            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm">
+          <div className="p-5 rounded-2xl bg-panel/90 border border-line space-y-2.5">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-700 flex items-center justify-center font-bold text-sm">
               4
             </div>
-            <h3 className="font-bold text-sm text-white">Evaluación: 10 Minutos y Nota Mínima 13 (Sección 12)</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Examen cronometrado estricto de 10 minutos (escala 0-20). Si saca ≥ 13, queda APROBADO directo y <span className="font-semibold text-white">NO rinde re-evaluación</span>. Si saca &lt; 13, rinde 2º intento tras 24h. La nota del 2º intento sustituye a la primera (no se promedian).
+            <h3 className="font-bold text-sm text-ink">Evaluación: 10 Minutos y Nota Mínima 13 (Sección 12)</h3>
+            <p className="text-xs text-muted leading-relaxed">
+              Examen cronometrado estricto de 10 minutos (escala 0-20). Si saca ≥ 13, queda APROBADO directo y <span className="font-semibold text-ink">NO rinde re-evaluación</span>. Si saca &lt; 13, rinde 2º intento tras 24h. La nota del 2º intento sustituye a la primera (no se promedian).
             </p>
           </div>
 
           {/* Card 5 */}
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
-            <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-sm">
+          <div className="p-5 rounded-2xl bg-panel/90 border border-line space-y-2.5">
+            <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 flex items-center justify-center font-bold text-sm">
               5
             </div>
-            <h3 className="font-bold text-sm text-white">Certificación Digital con QR Público (Sección 13)</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Emisión automática en PDF con código único (ej: <span className="font-mono text-cyan-300">CF-2026-BAL-000027</span>) y código QR que apunta a la página web de validación pública mostrando estado en tiempo real (VÁLIDO, REVOCADO, ANULADO o VENCIDO).
+            <h3 className="font-bold text-sm text-ink">Certificación Digital con QR Público (Sección 13)</h3>
+            <p className="text-xs text-muted leading-relaxed">
+              Emisión automática en PDF con código único (ej: <span className="font-mono text-cyan-700">CF-2026-BAL-000027</span>) y código QR que apunta a la página web de validación pública mostrando estado en tiempo real (VÁLIDO, REVOCADO, ANULADO o VENCIDO).
             </p>
           </div>
 
           {/* Card 6 */}
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-sm">
+          <div className="p-5 rounded-2xl bg-panel/90 border border-line space-y-2.5">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 flex items-center justify-center font-bold text-sm">
               6
             </div>
-            <h3 className="font-bold text-sm text-white">Asesoría Pericial Independiente (Sección 6)</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <h3 className="font-bold text-sm text-ink">Asesoría Pericial Independiente (Sección 6)</h3>
+            <p className="text-xs text-muted leading-relaxed">
               Módulo de consultoría independiente con asignación de perito consultor judicial y enlace directo a WhatsApp una vez validado el pago, con trazabilidad de atenciones, fecha y observaciones.
             </p>
           </div>
 
           {/* Card 7 */}
-          <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5 lg:col-span-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+          <div className="p-5 rounded-2xl bg-panel/90 border border-line space-y-2.5 lg:col-span-3">
+            <div className="w-9 h-9 rounded-xl bg-brand/10 border border-brand/20 text-brand flex items-center justify-center font-bold text-sm">
               7
             </div>
-            <h3 className="font-bold text-sm text-white">Protección de Contenidos y Auditoría Inmutable (Secciones 11 y 21)</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Los videos y transmisiones se reproducen exclusivamente por streaming protegido con marcas de agua dinámicas del estudiante y sin botones de descarga directa. Toda acción administrativa relevante (aprobaciones, rechazos, detección de fraude, emisión y revocación de notas) queda registrada en el <span className="font-mono text-amber-300">Audit Log</span>.
+            <h3 className="font-bold text-sm text-ink">Protección de Contenidos y Auditoría Inmutable (Secciones 11 y 21)</h3>
+            <p className="text-xs text-muted leading-relaxed">
+              Los videos y transmisiones se reproducen exclusivamente por streaming protegido con marcas de agua dinámicas del estudiante y sin botones de descarga directa. Toda acción administrativa relevante (aprobaciones, rechazos, detección de fraude, emisión y revocación de notas) queda registrada en el <span className="font-mono text-brand">Audit Log</span>.
             </p>
           </div>
         </div>
       </div>
 
       {/* 25 Sections Detailed Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+      <div className="bg-panel border border-line rounded-3xl p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-base font-bold text-white">Matriz de Cumplimiento de los 25 Puntos del Documento</h3>
-            <p className="text-xs text-slate-400">Verificación exhaustiva de cada acápite del flujo funcional entregado</p>
+            <h3 className="text-base font-bold text-ink">Matriz de Cumplimiento de los 25 Puntos del Documento</h3>
+            <p className="text-xs text-muted">Verificación exhaustiva de cada acápite del flujo funcional entregado</p>
           </div>
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-700 w-fit">
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 w-fit">
             25 / 25 Puntos Verificados
           </span>
         </div>
 
-        <div className="divide-y divide-slate-800/80 max-h-[500px] overflow-y-auto pr-2">
+        <div className="divide-y divide-line/80 max-h-[500px] overflow-y-auto pr-2">
           {sectionsList.map((sec) => (
-            <div key={sec.num} className="py-3 flex items-start gap-3.5 group hover:bg-slate-850/40 px-2 rounded-lg transition-colors">
-              <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 text-amber-400 font-mono text-xs flex items-center justify-center shrink-0 font-bold">
+            <div key={sec.num} className="py-3 flex items-start gap-3.5 group hover:bg-surface-high/40 px-2 rounded-lg transition-colors">
+              <div className="w-7 h-7 rounded-lg bg-surface-low border border-line text-brand font-mono text-xs flex items-center justify-center shrink-0 font-bold">
                 {sec.num}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-semibold text-white group-hover:text-amber-300 transition-colors">
+                  <h4 className="text-sm font-semibold text-ink group-hover:text-brand transition-colors">
                     {sec.title}
                   </h4>
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">{sec.desc}</p>
+                <p className="text-xs text-muted mt-0.5">{sec.desc}</p>
               </div>
             </div>
           ))}
@@ -355,41 +355,41 @@ export const ClientReviewGuide: React.FC = () => {
 
       {/* Official Diagram Modal */}
       {showDiagramModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-            <div className="p-4 sm:p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+        <div className="fixed inset-0 z-50 bg-canvas/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-panel border border-line rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-xl">
+            <div className="p-4 sm:p-6 border-b border-line flex items-center justify-between bg-canvas">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-brand/20 text-brand flex items-center justify-center">
                   <FileCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Anexo Gráfico Oficial: Flujo de Procesos Plataforma Educativa</h3>
-                  <p className="text-xs text-slate-400">Diagrama extraído del archivo entregado por el cliente (Francisco v5)</p>
+                  <h3 className="text-base font-bold text-ink">Anexo Gráfico Oficial: Flujo de Procesos Plataforma Educativa</h3>
+                  <p className="text-xs text-muted">Diagrama extraído del archivo entregado por el cliente (Francisco v5)</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowDiagramModal(false)}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                className="px-3 py-1.5 rounded-lg bg-surface-low hover:bg-surface-high text-muted text-xs font-semibold"
               >
                 Cerrar Visor
               </button>
             </div>
 
-            <div className="p-4 sm:p-6 overflow-auto bg-slate-950/80 flex justify-center items-center">
-              <img 
-                src="/anexo_flujo_procesos.png" 
-                alt="Flujo de Procesos Plataforma Educativa - Francisco v5" 
-                className="max-w-full h-auto rounded-xl border border-slate-800 shadow-2xl"
+            <div className="p-4 sm:p-6 overflow-auto bg-canvas/80 flex justify-center items-center">
+              <img
+                src="/anexo_flujo_procesos.png"
+                alt="Flujo de Procesos Plataforma Educativa - Francisco v5"
+                className="max-w-full h-auto rounded-xl border border-line shadow-xl"
               />
             </div>
 
-            <div className="p-4 border-t border-slate-800 bg-slate-950 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+            <div className="p-4 border-t border-line bg-canvas flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
               <span>Resolución nativa del documento: 2.27 MB PNG (2560 x 1440 aprox.)</span>
-              <a 
-                href="/anexo_flujo_procesos.png" 
-                target="_blank" 
+              <a
+                href="/anexo_flujo_procesos.png"
+                target="_blank"
                 rel="noreferrer"
-                className="text-amber-400 hover:underline flex items-center gap-1 font-semibold"
+                className="text-brand hover:underline flex items-center gap-1 font-semibold"
               >
                 <span>Abrir imagen en pestaña completa</span>
                 <ExternalLink className="w-3.5 h-3.5" />

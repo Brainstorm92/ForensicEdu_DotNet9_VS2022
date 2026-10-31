@@ -1,3 +1,4 @@
+using ForensicEdu.Domain.Policies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,7 +44,7 @@ public class EvaluationService : IEvaluationService
         var existingAttempts = enrollment.ExamAttempts.Where(a => a.CompletedAt != null).OrderBy(a => a.AttemptNumber).ToList();
         var attemptCount = existingAttempts.Count;
 
-        if (attemptCount >= 2)
+        if (attemptCount >= AcademicPolicy.MaximumAttempts)
         {
             throw new InvalidOperationException("Ha agotado el número máximo de intentos permitidos (2 intentos).");
         }
@@ -67,7 +68,7 @@ public class EvaluationService : IEvaluationService
         var attempt = enrollment.ExamAttempts.SingleOrDefault(a => a.CompletedAt == null)
             ?? throw new InvalidOperationException("Primero debe iniciar el examen en el servidor.");
         var answers = submission.SelectedAnswers;
-        if (DateTime.UtcNow > attempt.StartedAt.AddSeconds(600))
+        if (DateTime.UtcNow > attempt.StartedAt.AddSeconds(AcademicPolicy.ExamDurationSeconds))
             answers = JsonSerializer.Deserialize<Dictionary<string, int>>(attempt.AnswersJson) ?? new();
         int totalQuestions;
         int correctCount = 0;
@@ -87,8 +88,8 @@ public class EvaluationService : IEvaluationService
         catch (JsonException ex) { throw new InvalidOperationException("Banco de preguntas inválido.", ex); }
 
         // Scale 0 to 20
-        decimal score = totalQuestions > 0 ? Math.Round(((decimal)correctCount / totalQuestions) * 20m, 2) : 0m;
-        bool approved = score >= 13.0m;
+        decimal score = totalQuestions > 0 ? Math.Round(((decimal)correctCount / totalQuestions) * AcademicPolicy.MaximumScore, 2) : 0m;
+        bool approved = AcademicPolicy.IsApproved(score);
         var currentAttemptNumber = attemptCount + 1;
 
         DateTime? nextAttemptAllowedAt = null;
@@ -118,7 +119,7 @@ public class EvaluationService : IEvaluationService
         attempt.Approved = approved;
         attempt.Status = attemptStatus;
         attempt.CompletedAt = DateTime.UtcNow;
-        attempt.DurationSeconds = (int)Math.Min(600, (DateTime.UtcNow - attempt.StartedAt).TotalSeconds);
+        attempt.DurationSeconds = (int)Math.Min(AcademicPolicy.ExamDurationSeconds, (DateTime.UtcNow - attempt.StartedAt).TotalSeconds);
         attempt.AnswersJson = JsonSerializer.Serialize(answers);
         attempt.NextAttemptAllowedAt = nextAttemptAllowedAt;
         enrollment.AttemptsUsed = currentAttemptNumber;
