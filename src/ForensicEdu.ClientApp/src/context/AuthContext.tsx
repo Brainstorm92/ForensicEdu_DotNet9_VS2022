@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
-import { API_BASE_URL } from '../services/apiClient';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { apiRequest, setAccessToken } from '../services/apiTransport';
+export { authHeaders } from '../services/apiTransport';
 import type { UserProfile, UserRole } from '../types';
 
 export interface Registration {
@@ -14,41 +15,30 @@ interface AccountDto {
   validUntil: string; hasApprovedPurchase: boolean; lastPurchaseDate?: string;
 }
 
-// Tokens and passwords are never persisted in localStorage.
-let accessToken: string | null = null;
-export function authHeaders(): Record<string, string> { return accessToken ? { Authorization: `Bearer ${accessToken}` } : {}; }
-export async function accountRequest(path: string, init: RequestInit = {}) {
-  let response: Response;
-  const headers = new Headers(init.headers);
-  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
-  try { response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers }); }
-  catch { throw new Error('No se pudo conectar con la API. Compruebe que WebApi esté ejecutándose.'); }
-  const data = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(data?.message || (response.status === 401 ? 'La sesión no es válida. Inicie sesión de nuevo.' :
-    response.status >= 500 ? 'El servidor no pudo procesar la solicitud. Inténtelo nuevamente.' : 'Revise los datos ingresados.'));
-  if (!data) throw new Error('La API devolvió una respuesta inesperada. Compruebe la configuración del servidor.');
-  return data;
-}
+export const accountRequest = apiRequest<any>;
 const roles: UserRole[] = ['estudiante', 'superadmin', 'admin_academico', 'admin_financiero', 'docente', 'soporte', 'estudiante', 'consultor'];
-function profile(dto: AccountDto): UserProfile {
+export function profile(dto: AccountDto): UserProfile {
   return { id: dto.id, nombres: dto.nombres || dto.fullName, apellidos: dto.apellidos || '',
     email: dto.email, numeroDocumento: dto.dni, telefono: dto.phone, tipoDocumento: dto.tipoDocumento,
     paisResidencia: dto.paisResidencia, nivelEducativo: dto.nivelEducativo,
     institucionEducativa: dto.institucionEducativa, profesion: dto.profesion,
-    role: roles[dto.role] || 'estudiante', createdAt: dto.registeredAt, validUntil: dto.validUntil,
+    role: roles[dto.role] || 'estudiante', createdAt: dto.registeredAt, validUntil: dto.validUntil || '',
     hasApprovedPurchase: dto.hasApprovedPurchase, lastPurchaseDate: dto.lastPurchaseDate,
-    accountStatus: dto.status === 1 ? 'REGISTRADA' : dto.status === 2 ? 'ACTIVA' : dto.status === 6 ? 'PENDIENTE_DE_ELIMINACIÓN' : 'VENCIDA' };
+    accountStatus: (['REGISTRADA','REGISTRADA','ACTIVA','PRÓXIMA_A_VENCER','VENCIDA','SUSPENDIDA','PENDIENTE_DE_ELIMINACIÓN','ELIMINADA'] as const)[Number(dto.status)]||'VENCIDA' };
 }
+export interface GoogleAuthResult {token?:string;requiresRegistration:boolean;requiresLinkPassword:boolean;email:string;nombres:string;apellidos:string;message:string;}
 interface AuthState {
   user: UserProfile | null;
   register: (data: Registration) => Promise<string>;
   login: (email: string, password: string) => Promise<void>;
+  googleLogin:(credential:string,profile?:Omit<Registration,'email'|'password'>,linkPassword?:string)=>Promise<GoogleAuthResult>;
   refresh: () => Promise<void>;
   logout: () => void;
 }
 const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
+  useEffect(()=>{const expired=()=>setUser(null);window.addEventListener('forensicedu:session-expired',expired);return ()=>window.removeEventListener('forensicedu:session-expired',expired);},[]);
   const refresh = async () => { setUser(profile(await accountRequest('/auth/me'))); };
   const register = async (data: Registration) => {
     const result = await accountRequest('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -56,13 +46,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return result.userId as string;
   };
   const login = async (email: string, password: string) => {
-    accessToken = null; setUser(null);
+    setAccessToken(null); setUser(null);
     const result = await accountRequest('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
-    accessToken = result.token;
-    try { await refresh(); } catch (error) { accessToken = null; throw error; }
+    setAccessToken(result.token);
+    try { await refresh(); } catch (error) { setAccessToken(null); throw error; }
   };
-  const logout = () => { accessToken = null; setUser(null); };
-  return <AuthContext.Provider value={{ user, register, login, refresh, logout }}>{children}</AuthContext.Provider>;
+  const googleLogin=async(credential:string,profile?:Omit<Registration,'email'|'password'>,linkPassword?:string)=>{
+    const result=await apiRequest<GoogleAuthResult>('/auth/google',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({credential,profile,linkPassword})});
+    if(result.token){setAccessToken(result.token);try{await refresh();}catch(error){setAccessToken(null);setUser(null);throw error;}}return result;
+  };
+  const logout = () => { setAccessToken(null); setUser(null); };
+  return <AuthContext.Provider value={{ user, register, login, googleLogin, refresh, logout }}>{children}</AuthContext.Provider>;
 }
 export function useAuth() {
   const auth = useContext(AuthContext);

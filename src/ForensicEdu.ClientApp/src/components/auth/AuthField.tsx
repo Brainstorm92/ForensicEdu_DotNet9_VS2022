@@ -1,0 +1,6 @@
+import {useId,useState} from 'react';
+import {Eye,EyeOff} from 'lucide-react';
+export function AuthField({name,label,value,onChange,type='text',error,readOnly=false,autoComplete,maxLength=100,hint}:{name:string;label:string;value:string;onChange:(value:string)=>void;type?:string;error?:string;readOnly?:boolean;autoComplete?:string;maxLength?:number;hint?:string}){
+ const id=useId();const [visible,setVisible]=useState(false);const password=type==='password';
+ return <label htmlFor={id} className="block text-sm font-medium space-y-1.5"><span>{label}</span><div className="relative"><input id={id} name={name} type={password&&visible?'text':type} value={value} readOnly={readOnly} onChange={e=>onChange(e.target.value)} autoComplete={autoComplete} maxLength={maxLength} aria-invalid={!!error} aria-describedby={error||hint?id+'-help':undefined} className={`auth-input ${password?'pr-12':''} ${error?'auth-input-error':''}`}/>{password&&<button type="button" aria-label={visible?'Ocultar contraseña':'Mostrar contraseña'} aria-pressed={visible} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted rounded-lg hover:text-brand" onClick={()=>setVisible(v=>!v)}>{visible?<EyeOff size={18}/>:<Eye size={18}/>}</button>}</div>{(error||hint)&&<span id={id+'-help'} className={`block text-xs ${error?'text-rose-700':'text-muted'}`}>{error||hint}</span>}</label>;
+}

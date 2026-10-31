@@ -7,10 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ForensicEdu.Application.Common.Interfaces;
 
-public interface IApplicationDbContext
+public interface IApplicationDbContext : IUnitOfWork
 {
     DbSet<User> Users { get; }
     DbSet<Course> Courses { get; }
+    DbSet<CourseDocument> CourseDocuments { get; }
+    DbSet<CourseModule> CourseModules { get; }
     DbSet<LiveEvent> LiveEvents { get; }
     DbSet<AdvisoryService> AdvisoryServices { get; }
     DbSet<Order> Orders { get; }
@@ -23,5 +25,5 @@ public interface IApplicationDbContext
     DbSet<SupportTicket> SupportTickets { get; }
     DbSet<SystemSocialSetting> SystemSocialSettings { get; }
 
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
 }

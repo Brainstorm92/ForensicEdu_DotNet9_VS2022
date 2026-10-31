@@ -3,7 +3,9 @@
  * (ForensicEdu.WebApi / ForensicEdu.sln)
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { authHeaders } from './apiTransport';
+export { API_BASE_URL } from './apiTransport';
+import { API_BASE_URL } from './apiTransport';
 
 export interface CheckoutPayload {
   userId: string;
@@ -28,7 +30,7 @@ export const DotnetApiClient = {
   login: async (email: string, password: string) => {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) throw new Error((await res.json()).message || 'Error de inicio de sesión');
@@ -46,7 +48,7 @@ export const DotnetApiClient = {
   submitCheckoutOrder: async (payload: CheckoutPayload) => {
     const res = await fetch(`${API_BASE_URL}/orders/checkout`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     const data = await res.json();
@@ -60,7 +62,7 @@ export const DotnetApiClient = {
   submitExam: async (payload: ExamSubmissionPayload) => {
     const res = await fetch(`${API_BASE_URL}/exams/submit`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
     const data = await res.json();
@@ -83,7 +85,7 @@ export const DotnetApiClient = {
   // 7. Aprobación Financiera y Renovación de Vigencia (2 Años)
   approvePayment: async (paymentId: string, adminUserId: string) => {
     const res = await fetch(`${API_BASE_URL}/admin/payments/${paymentId}/approve?adminUserId=${adminUserId}`, {
-      method: 'POST',
+      method: 'POST', headers: authHeaders(),
     });
     if (!res.ok) throw new Error('Error al aprobar pago');
     return res.json();
@@ -93,7 +95,7 @@ export const DotnetApiClient = {
   revokeCertificate: async (code: string, reason: string, adminUserId: string) => {
     const res = await fetch(`${API_BASE_URL}/admin/certificates/${encodeURIComponent(code)}/revoke?adminUserId=${adminUserId}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason }),
     });
     if (!res.ok) throw new Error('Error al revocar certificado');
