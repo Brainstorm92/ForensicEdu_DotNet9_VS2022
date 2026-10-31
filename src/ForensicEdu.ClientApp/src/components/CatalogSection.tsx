@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { 
-  BookOpen, 
-  Clock, 
-  User, 
-  ShieldCheck, 
-  Video, 
-  Calendar, 
-  ArrowRight, 
-  CheckCircle2, 
+import {
+  BookOpen,
+  Clock,
+  User,
+  ShieldCheck,
+  Video,
+  Calendar,
+  ArrowRight,
+  CheckCircle2,
   Search,
   Filter,
   Sparkles,
@@ -24,7 +24,7 @@ export const CatalogSection: React.FC = () => {
 
   const [activeFilter, setActiveFilter] = useState<'all' | 'cursos' | 'eventos' | 'asesoria'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Modals
   const [selectedProduct, setSelectedProduct] = useState<{
     item: Course | EventItem | AdvisoryItem;
@@ -33,12 +33,12 @@ export const CatalogSection: React.FC = () => {
 
   const [courseDetailsModal, setCourseDetailsModal] = useState<Course | null>(null);
 
-  const filteredCourses = courses.filter(c => 
+  const filteredCourses = courses.filter(c => c.isPublished !== false && c.isActive !== false && (
     c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.shortDescription.toLowerCase().includes(searchQuery.toLowerCase())
+    c.shortDescription.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const filteredEvents = events.filter(e => 
+  const filteredEvents = events.filter(e =>
     e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     e.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -48,33 +48,33 @@ export const CatalogSection: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-in fade-in duration-300">
+    <div className="stitch-catalog max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-in fade-in duration-300">
       {/* Hero Catalog Banner */}
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 p-8 sm:p-12 shadow-2xl">
+      <div className="stitch-hero relative rounded-3xl overflow-hidden bg-gradient-to-r from-panel via-surface-low to-panel border border-line p-8 sm:p-12 shadow-xl">
         <div className="max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/30 text-amber-300 text-xs font-semibold">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>Formación y Peritaje Criminalístico de Élite</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/30 text-brand text-xs font-semibold">
+            <Sparkles className="w-4 h-4 text-brand" />
+            <span>Formación especializada · Ciencias forenses</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-            Programas Oficiales en Ciencias Forenses y Certificación con QR
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-ink tracking-tight leading-tight">
+            Ciencia, formación y precisión forense
           </h1>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-            Explora las 8 especialidades periciales, congresos y seminarios en vivo, y asesorías personalizadas en juicio oral. Cuentas con aula virtual con streaming protegido, exámenes cronometrados de 10 min y diplomas verificables.
+          <p className="text-muted text-sm sm:text-base leading-relaxed">
+            Explora las especialidades disponibles, congresos y seminarios en vivo, y asesorías personalizadas en juicio oral. Cuentas con aula virtual con streaming protegido, exámenes cronometrados de 10 min y diplomas verificables.
           </p>
 
           {/* Quick Stats */}
-          <div className="pt-2 flex flex-wrap gap-6 text-xs text-slate-400">
+          <div className="pt-2 flex flex-wrap gap-6 text-xs text-muted">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>8 Especialidades Forenses</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+              <span>Especialidades disponibles</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-700" />
               <span>Certificados QR Válidos</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-700" />
               <span>Asesoría Pericial Directa</span>
             </div>
           </div>
@@ -82,15 +82,15 @@ export const CatalogSection: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-2 bg-slate-900 border border-slate-800 rounded-2xl">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-2 bg-panel border border-line rounded-2xl">
         {/* Category Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto p-1">
           <button
             onClick={() => setActiveFilter('all')}
             className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
               activeFilter === 'all'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                ? 'bg-brand text-ink shadow-md shadow-brand/20'
+                : 'text-muted hover:text-ink hover:bg-surface-low'
             }`}
           >
             Todos los Productos ({courses.length + events.length + 1})
@@ -99,8 +99,8 @@ export const CatalogSection: React.FC = () => {
             onClick={() => setActiveFilter('cursos')}
             className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
               activeFilter === 'cursos'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                ? 'bg-brand text-ink shadow-md shadow-brand/20'
+                : 'text-muted hover:text-ink hover:bg-surface-low'
             }`}
           >
             Cursos Forenses ({courses.length})
@@ -109,8 +109,8 @@ export const CatalogSection: React.FC = () => {
             onClick={() => setActiveFilter('eventos')}
             className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
               activeFilter === 'eventos'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                ? 'bg-brand text-ink shadow-md shadow-brand/20'
+                : 'text-muted hover:text-ink hover:bg-surface-low'
             }`}
           >
             Eventos en Vivo ({events.length})
@@ -119,8 +119,8 @@ export const CatalogSection: React.FC = () => {
             onClick={() => setActiveFilter('asesoria')}
             className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
               activeFilter === 'asesoria'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                ? 'bg-brand text-ink shadow-md shadow-brand/20'
+                : 'text-muted hover:text-ink hover:bg-surface-low'
             }`}
           >
             Asesoría Pericial (1)
@@ -129,13 +129,13 @@ export const CatalogSection: React.FC = () => {
 
         {/* Search */}
         <div className="relative w-full sm:w-72 px-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-muted absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Buscar por especialidad..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+            className="w-full bg-canvas border border-line/80 rounded-xl pl-10 pr-4 py-2 text-xs text-ink placeholder-slate-500 focus:outline-none focus:border-brand"
           />
         </div>
       </div>
@@ -145,48 +145,49 @@ export const CatalogSection: React.FC = () => {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-amber-400" />
-                <span>Cursos Especializados en Ciencias Forenses (Sección 5.1)</span>
+              <h2 className="text-xl font-bold text-ink flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-brand" />
+                <span>Cursos de Especialización Forense</span>
               </h2>
-              <p className="text-xs text-slate-400">Modalidad virtual asincrónica con streaming protegido y certificación QR</p>
+              <p className="text-xs text-muted">Modalidad virtual asincrónica con streaming protegido y certificación QR</p>
             </div>
-            <span className="text-xs font-semibold text-slate-400">
+            <span className="text-xs font-semibold text-muted">
               {filteredCourses.length} cursos listados
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             {filteredCourses.map((course) => {
               const enrolled = isEnrolled(course.id);
               return (
                 <div
                   key={course.id}
-                  className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl overflow-hidden flex flex-col group transition-all duration-200 hover:-translate-y-1 shadow-lg"
+                  data-course-id={course.id}
+                  className="bg-panel border border-line hover:border-line rounded-2xl overflow-hidden flex flex-col group transition-all duration-200 hover:-translate-y-1 shadow-lg"
                 >
                   {/* Banner */}
-                  <div className="relative h-44 overflow-hidden bg-slate-950">
+                  <div className="relative h-44 overflow-hidden bg-canvas">
                     <img
                       src={course.bannerUrl}
                       alt={course.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
-                    <span className="absolute top-3 left-3 text-[10px] font-mono font-bold tracking-wider px-2 py-0.5 rounded bg-slate-900/90 text-amber-300 border border-amber-500/30">
+                    <div className="absolute inset-0 stitch-image-shade bg-gradient-to-t from-navy via-navy/40 to-transparent"></div>
+                    <span className="absolute top-3 left-3 text-[10px] font-mono font-bold tracking-wider px-2 py-0.5 rounded bg-panel/90 text-brand border border-brand/30">
                       {course.code}
                     </span>
                     {enrolled && (
-                      <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 flex items-center gap-1 shadow-md">
+                      <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-ink flex items-center gap-1 shadow-md">
                         <CheckCircle2 className="w-3 h-3" />
                         <span>Matriculado</span>
                       </span>
                     )}
-                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-slate-300">
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-muted">
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-amber-400" />
+                        <Clock className="w-3.5 h-3.5 text-brand" />
                         <span>{course.durationHours} horas acad.</span>
                       </span>
-                      <span className="font-bold text-amber-400 text-sm">
+                      <span className="font-bold text-brand text-sm">
                         S/. {course.price.toFixed(2)}
                       </span>
                     </div>
@@ -195,24 +196,24 @@ export const CatalogSection: React.FC = () => {
                   {/* Body */}
                   <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                     <div>
-                      <h3 className="font-bold text-base text-white group-hover:text-amber-400 transition-colors line-clamp-1">
+                      <h3 className="font-bold text-base text-ink group-hover:text-brand transition-colors line-clamp-1">
                         {course.title}
                       </h3>
-                      <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-muted mt-1 line-clamp-2 leading-relaxed">
                         {course.shortDescription}
                       </p>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-800/80 space-y-3">
-                      <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                        <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <div className="pt-2 border-t border-line/80 space-y-3">
+                      <div className="flex items-center gap-2 text-[11px] text-muted">
+                        <User className="w-3.5 h-3.5 text-muted shrink-0" />
                         <span className="truncate">{course.instructor}</span>
                       </div>
 
                       <div className="flex gap-2">
                         <button
                           onClick={() => setCourseDetailsModal(course)}
-                          className="flex-1 py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors"
+                          className="flex-1 py-2 px-2.5 rounded-xl bg-surface-low hover:bg-surface-high text-ink text-xs font-medium transition-colors"
                         >
                           Ver Detalles
                         </button>
@@ -223,15 +224,15 @@ export const CatalogSection: React.FC = () => {
                               setSelectedCourseId(course.id);
                               setActiveTab('mis-cursos');
                             }}
-                            className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors flex items-center gap-1"
+                            className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-ink text-xs font-bold transition-colors flex items-center gap-1"
                           >
                             <Video className="w-3.5 h-3.5" />
                             <span>Aula</span>
                           </button>
                         ) : (
                           <button
-                            onClick={() => setSelectedProduct({ item: course, type: 'curso' })}
-                            className="py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-colors flex items-center gap-1 shadow-md shadow-amber-500/20"
+                            data-testid={`buy-${course.id}`} onClick={() => setSelectedProduct({ item: course, type: 'curso' })}
+                            className="py-2 px-3 rounded-xl bg-brand hover:bg-brand text-ink text-xs font-bold transition-colors flex items-center gap-1 shadow-md shadow-brand/20"
                           >
                             <span>Comprar</span>
                             <ArrowRight className="w-3.5 h-3.5" />
@@ -252,62 +253,62 @@ export const CatalogSection: React.FC = () => {
         <section className="space-y-4 pt-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-amber-400" />
+              <h2 className="text-xl font-bold text-ink flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-brand" />
                 <span>Eventos en Vivo & Congresos (Sección 5.2 & 14)</span>
               </h2>
-              <p className="text-xs text-slate-400">Transmisiones en tiempo real, congresos periciales y seminarios interactivos</p>
+              <p className="text-xs text-muted">Transmisiones en tiempo real, congresos periciales y seminarios interactivos</p>
             </div>
-            <span className="text-xs font-semibold text-slate-400">
+            <span className="text-xs font-semibold text-muted">
               {filteredEvents.length} eventos
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             {filteredEvents.map((evt) => (
               <div
                 key={evt.id}
-                className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col group hover:border-slate-700 transition-all duration-200 hover:-translate-y-1 shadow-lg"
+                className="bg-panel border border-line rounded-2xl overflow-hidden flex flex-col group hover:border-line transition-all duration-200 hover:-translate-y-1 shadow-lg"
               >
-                <div className="relative h-40 overflow-hidden bg-slate-950">
+                <div className="relative h-40 overflow-hidden bg-canvas">
                   <img
                     src={evt.bannerUrl}
                     alt={evt.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
-                  <span className="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-900/90 text-indigo-200 border border-indigo-700">
+                  <div className="absolute inset-0 stitch-image-shade bg-gradient-to-t from-navy via-navy/40 to-transparent"></div>
+                  <span className="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50/90 text-indigo-700 border border-indigo-200">
                     {evt.type}
                   </span>
                   {evt.accessStatus === 'EN_VIVO' && (
-                    <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600 text-white flex items-center gap-1 animate-pulse shadow-md">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                    <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-600 text-ink flex items-center gap-1 animate-pulse shadow-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-panel"></span>
                       <span>EN VIVO</span>
                     </span>
                   )}
-                  <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-xs text-slate-300">
+                  <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-xs text-muted">
                     <span>{evt.date}</span>
-                    <span className="font-bold text-amber-400 text-sm">S/. {evt.price.toFixed(2)}</span>
+                    <span className="font-bold text-brand text-sm">S/. {evt.price.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                   <div>
-                    <h3 className="font-bold text-sm text-white group-hover:text-amber-400 transition-colors line-clamp-2">
+                    <h3 className="font-bold text-sm text-ink group-hover:text-brand transition-colors line-clamp-2">
                       {evt.title}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                    <p className="text-xs text-muted mt-1 line-clamp-2">
                       {evt.description}
                     </p>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800 space-y-2.5">
-                    <div className="text-[11px] text-slate-400 truncate">
+                  <div className="pt-2 border-t border-line space-y-2.5">
+                    <div className="text-[11px] text-muted truncate">
                       Ponente: {evt.speaker}
                     </div>
                     <button
                       onClick={() => setSelectedProduct({ item: evt, type: 'evento' })}
-                      className="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20"
+                      className="w-full py-2 px-3 rounded-xl bg-brand hover:bg-brand text-ink text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-md shadow-brand/20"
                     >
                       <span>Inscribirse al Evento</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -321,40 +322,40 @@ export const CatalogSection: React.FC = () => {
       )}
 
       {/* SECTION 6: ASESORÍA PERSONALIZADA */}
-      {(activeFilter === 'all' || activeFilter === 'asesoria') && (
+      {advisory.id && (activeFilter === 'all' || activeFilter === 'asesoria') && (
         <section className="pt-4">
-          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-emerald-950/40 to-slate-900 border border-emerald-800/60 shadow-xl relative overflow-hidden">
+          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-panel via-emerald-950/40 to-panel border border-emerald-200/60 shadow-xl relative overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
               <div className="lg:col-span-2 space-y-3">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                  Servicio Especializado Independiente (Sección 6)
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 border border-emerald-500/40">
+                  Servicio Especializado Independiente
                 </span>
-                <h3 className="text-2xl font-bold text-white">
+                <h3 className="text-2xl font-bold text-ink">
                   {advisory.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-muted leading-relaxed">
                   {advisory.description}
                 </p>
-                <div className="pt-2 flex flex-wrap gap-4 text-xs text-slate-300">
+                <div className="pt-2 flex flex-wrap gap-4 text-xs text-muted">
                   <div className="flex items-center gap-1.5">
-                    <User className="w-4 h-4 text-amber-400" />
-                    <span>Consultor: <strong className="text-white">{advisory.specialist}</strong> ({advisory.specialty})</span>
+                    <User className="w-4 h-4 text-brand" />
+                    <span>Consultor: <strong className="text-ink">{advisory.specialist}</strong> ({advisory.specialty})</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <MessageCircle className="w-4 h-4 text-emerald-400" />
+                    <MessageCircle className="w-4 h-4 text-emerald-700" />
                     <span>Conexión directa por WhatsApp</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-950/80 p-5 rounded-2xl border border-slate-800 text-center space-y-3">
-                <div className="text-xs text-slate-400">Honorario por Sesión Pericial:</div>
-                <div className="text-3xl font-extrabold text-amber-400">
-                  S/. {advisory.price.toFixed(2)} <span className="text-xs text-slate-400 font-normal">PEN</span>
+              <div className="bg-canvas/80 p-5 rounded-2xl border border-line text-center space-y-3">
+                <div className="text-xs text-muted">Honorario por Sesión Pericial:</div>
+                <div className="text-3xl font-extrabold text-brand">
+                  S/. {advisory.price.toFixed(2)} <span className="text-xs text-muted font-normal">PEN</span>
                 </div>
                 <button
                   onClick={() => setSelectedProduct({ item: advisory, type: 'asesoria' })}
-                  className="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
+                  className="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-ink font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>Adquirir y Conectar con Consultor</span>
@@ -376,43 +377,43 @@ export const CatalogSection: React.FC = () => {
 
       {/* Course Details Modal */}
       {courseDetailsModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 space-y-5">
+        <div className="fixed inset-0 z-50 bg-canvas/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-panel border border-line rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl p-6 space-y-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="text-xs font-mono font-bold text-amber-400">{courseDetailsModal.code}</span>
-                <h3 className="text-xl font-bold text-white mt-1">{courseDetailsModal.title}</h3>
-                <p className="text-xs text-slate-400">{courseDetailsModal.instructorTitle}</p>
+                <span className="text-xs font-mono font-bold text-brand">{courseDetailsModal.code}</span>
+                <h3 className="text-xl font-bold text-ink mt-1">{courseDetailsModal.title}</h3>
+                <div className="flex items-center gap-3 mt-3">{courseDetailsModal.instructorImageUrl&&<img src={courseDetailsModal.instructorImageUrl} alt={courseDetailsModal.instructor} className="w-12 h-12 rounded-full object-cover"/>}<div><p className="text-sm font-semibold">{courseDetailsModal.instructor}</p><p className="text-xs text-muted">{courseDetailsModal.instructorTitle}</p></div></div>
               </div>
-              <button 
+              <button
                 onClick={() => setCourseDetailsModal(null)}
-                className="p-1 rounded-md text-slate-400 hover:text-white"
+                className="p-1 rounded-md text-muted hover:text-ink"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               {courseDetailsModal.fullDescription}
             </p>
 
             <div className="space-y-3">
-              <h4 className="font-bold text-xs text-amber-400 uppercase tracking-wider">
-                Módulos del Curso y Streaming Autenticado (Sección 11.2)
+              <h4 className="font-bold text-xs text-brand uppercase tracking-wider">
+                Módulos del Curso y Streaming Autenticado
               </h4>
               <div className="space-y-2">
                 {courseDetailsModal.modules.length > 0 ? (
                   courseDetailsModal.modules.map((m, idx) => (
-                    <div key={m.id} className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+                    <div key={m.id} className="p-3 rounded-xl bg-canvas border border-line flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2.5">
-                        <Video className="w-4 h-4 text-slate-400" />
-                        <span className="text-white font-medium">{m.title}</span>
+                        <Video className="w-4 h-4 text-muted" />
+                        <span className="text-ink font-medium">{m.title}</span>
                       </div>
-                      <span className="text-slate-500 text-[11px]">{m.duration}</span>
+                      <span className="text-muted text-[11px]">{m.duration}</span>
                     </div>
                   ))
                 ) : (
-                  <div className="p-3 rounded-xl bg-slate-950 text-slate-400 text-xs">
+                  <div className="p-3 rounded-xl bg-canvas text-muted text-xs">
                     4 Módulos de especialización pericial grabados en alta definición con casos forenses reales.
                   </div>
                 )}
@@ -420,25 +421,25 @@ export const CatalogSection: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-bold text-xs text-amber-400 uppercase tracking-wider">
-                Materiales Educativos Incluidos (Sección 11.1)
+              <h4 className="font-bold text-xs text-brand uppercase tracking-wider">
+                Materiales Educativos Incluidos
               </h4>
-              <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+              <ul className="text-xs text-muted space-y-1.5 list-disc list-inside">
                 {courseDetailsModal.materialesIncluidos.map((mat, i) => (
                   <li key={i}>{mat}</li>
                 ))}
               </ul>
             </div>
 
-            <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+            <div className="pt-4 border-t border-line flex items-center justify-between">
               <div>
-                <span className="text-xs text-slate-400">Inversión:</span>
-                <span className="text-xl font-bold text-amber-400 ml-2">S/. {courseDetailsModal.price.toFixed(2)}</span>
+                <span className="text-xs text-muted">Inversión:</span>
+                <span className="text-xl font-bold text-brand ml-2">S/. {courseDetailsModal.price.toFixed(2)}</span>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setCourseDetailsModal(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs"
+                  className="px-4 py-2 rounded-xl bg-surface-low text-muted text-xs"
                 >
                   Cerrar
                 </button>
@@ -448,7 +449,7 @@ export const CatalogSection: React.FC = () => {
                     setCourseDetailsModal(null);
                     setSelectedProduct({ item: c, type: 'curso' });
                   }}
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs"
+                  className="px-5 py-2 rounded-xl bg-brand hover:bg-brand text-ink font-bold text-xs"
                 >
                   Comprar Curso
                 </button>

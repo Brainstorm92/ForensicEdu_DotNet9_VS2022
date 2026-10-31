@@ -14,6 +14,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Course> Courses => Set<Course>();
+    public DbSet<CourseDocument> CourseDocuments => Set<CourseDocument>();
+    public DbSet<CourseModule> CourseModules => Set<CourseModule>();
     public DbSet<LiveEvent> LiveEvents => Set<LiveEvent>();
     public DbSet<AdvisoryService> AdvisoryServices => Set<AdvisoryService>();
     public DbSet<Order> Orders => Set<Order>();
@@ -29,12 +31,18 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<CourseModule>().ToTable("CourseModule");
+        modelBuilder.Entity<CourseDocument>().ToTable("CourseDocument");
 
         // User
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.Username).HasMaxLength(50);
+            entity.HasIndex(e => e.Username).IsUnique();
+            entity.Property(e => e.GoogleSubject).HasMaxLength(255);
+            entity.HasIndex(e => e.GoogleSubject).IsUnique();
             entity.HasIndex(e => e.Dni);
             entity.Property(e => e.FullName).HasMaxLength(200).IsRequired();
             entity.Property(e => e.Email).HasMaxLength(200).IsRequired();
