@@ -19,6 +19,8 @@ public static class DependencyInjection
         services.AddScoped<IAntifraudService, AntifraudService>();
         services.AddScoped<IEvaluationService, EvaluationService>();
         services.AddScoped<IAccountLifecycleService, AccountLifecycleService>();
+        services.AddScoped<IAdvisoryCare, AdvisoryCareService>();
+        services.AddScoped<IStudentNotificationCenter, StudentNotificationCenter>();
         return services;
     }
 }

@@ -1,3 +1,4 @@
+import {ResponsiveDialog} from './dialogs/ResponsiveDialog';
 import {useEffect,useRef,useState} from 'react';
 import {useApp} from '../context/AppContext';
 import {apiRequest,jsonRequest} from '../services/apiTransport';
@@ -24,8 +25,8 @@ export function ExamModal({enrollment,courseTitle,onClose}:{enrollment:Enrollmen
   queue.current=queue.current.catch(()=>{}).then(async()=>{await apiRequest(`/exam-sessions/${session.id}/answers`,jsonRequest('PUT',next));if(alive.current)setSaved('Respuestas guardadas.');}).catch(err=>{if(alive.current){setSaved('');setError(message(err));}throw err;});void queue.current.catch(()=>{});
  };
  const question=session?.questions[index];
- return <div className="fixed inset-0 z-50 bg-black/60 p-3 sm:p-6 overflow-y-auto flex items-start justify-center"><section role="dialog" aria-modal="true" aria-labelledby="exam-title" className="w-full max-w-3xl bg-panel border border-line rounded-2xl p-5 sm:p-7 my-auto space-y-5">
- <header className="flex items-start justify-between gap-3"><div><h2 id="exam-title" className="text-xl font-bold">Evaluación · {courseTitle}</h2><p className="text-sm text-muted">10 minutos · Nota mínima 13/20 · Máximo dos intentos</p></div><button className={secondary} disabled={busy} onClick={onClose}>Cerrar</button></header>
+ return <ResponsiveDialog labelledBy="exam-title" maxWidth="48rem" closeLabel="Cerrar evaluación" closeDisabled={busy} onClose={onClose}>
+ <header className="flex items-start justify-between gap-3"><div><h2 id="exam-title" className="text-xl font-bold">Evaluación · {courseTitle}</h2><p className="text-sm text-muted">10 minutos · Nota mínima 13/20 · Máximo dos intentos</p></div></header>
  <Notice error>{error}</Notice>
  {result?<><Notice>{result.message}</Notice><p data-testid="exam-result" className="text-3xl font-bold">{result.score}/20 · {result.approved?'Aprobado':'Desaprobado'}</p><p>Evaluación finalizada.</p>{result.certificateCode&&<p className="font-mono break-all text-xs">{result.certificateCode}</p>}<button className={button} onClick={()=>{onClose();setActiveTab(result.approved?'mis-certificados':'mis-cursos');}}>Ver mis resultados</button></>:session&&question?<>
  <div className="flex justify-between gap-3 text-sm"><span>Intento {session.attemptNumber} · Pregunta {index+1} de {session.questions.length}</span><strong aria-label="Tiempo restante">{Math.floor(left/60)}:{String(left%60).padStart(2,'0')}</strong></div>
@@ -34,5 +35,5 @@ export function ExamModal({enrollment,courseTitle,onClose}:{enrollment:Enrollmen
  <p className="text-xs text-muted" aria-live="polite">{saved}</p>
  <div className="flex justify-between flex-wrap gap-3"><button className={secondary} disabled={index===0||busy} onClick={()=>setIndex(i=>i-1)}>Anterior</button>{index<session.questions.length-1?<button className={button} disabled={busy} onClick={()=>setIndex(i=>i+1)}>Siguiente</button>:<button data-testid="submit-exam" className={button} disabled={busy} onClick={()=>void submit()}>{busy?'Enviando…':'Finalizar evaluación'}</button>}</div>
  </>:!error?<p>Preparando tu evaluación…</p>:<p className="text-sm text-muted">No se pudo iniciar la evaluación. Cierra esta ventana y revisa tu matrícula.</p>}
- </section></div>;
+ </ResponsiveDialog>;
 }

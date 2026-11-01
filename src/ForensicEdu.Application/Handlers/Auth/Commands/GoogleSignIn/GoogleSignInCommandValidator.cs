@@ -11,6 +11,7 @@ public sealed class GoogleSignInCommandValidator:AbstractValidator<GoogleSignInC
     RuleFor(x=>x.Input.Profile!.PaisResidencia).NotEmpty().MaximumLength(100);RuleFor(x=>x.Input.Profile!.InstitucionEducativa).NotEmpty().MaximumLength(300);
     RuleFor(x=>x.Input.Profile!.Profesion).NotEmpty().MaximumLength(200);RuleFor(x=>x.Input.Profile!.TipoDocumento).Must(v=>v is "DNI" or "CE" or "Pasaporte");
     RuleFor(x=>x.Input.Profile!.NivelEducativo).Must(v=>v is "Pregrado" or "Bachiller" or "Licenciatura" or "Maestría" or "Doctorado");
+    RuleFor(x=>x.Input.Profile!.BirthDate).Must(ForensicEdu.Application.Common.Validation.BirthDateRules.Valid).WithMessage("Indique su fecha de nacimiento; no puede ser una fecha futura.");
     RuleFor(x=>x.Input.Profile!.AcceptTerms).Equal(true);RuleFor(x=>x.Input.Profile!.AcceptPrivacy).Equal(true);
    });
   });

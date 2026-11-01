@@ -40,8 +40,10 @@ Check(requests.Length == 83, "83 comandos y consultas de MediatR descubiertos");
 var services = new ServiceCollection();
 services.AddLogging(); services.AddApplicationServices();
 services.AddSingleton<IGoogleIdentityValidator,DisabledGoogle>();
+services.AddSingleton<IEmailConfirmation,TestConfirmation>();
 services.AddDatabaseResilience(new ConfigurationBuilder().Build());
 services.AddDbContext<ApplicationDbContext>(o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+services.AddScoped<ICoursePurchaseGate,CoursePurchaseGate>();
 services.AddScoped<IApplicationDbContext>(p => p.GetRequiredService<ApplicationDbContext>());
 services.AddScoped<IUnitOfWork>(p => p.GetRequiredService<ApplicationDbContext>());
 var actor = new TestUser(); services.AddSingleton<ICurrentUser>(actor);
@@ -68,11 +70,13 @@ await Reject(new SettingsSetCommand("X", new SettingRequest(null!)), "Pipeline r
 await Reject(new ExamSessionsSaveCommand("attempt", null!), "Pipeline rechaza respuestas nulas de examen");
 await Reject(new AdminRevokeCertificateCommand("CF-1", new RevokeRequest("")), "Pipeline exige motivo de revocación");
 var registration = new RegisterRequest("Ana Forense", "ana@example.invalid", "12345678", "999888777", "ExamplePassword123!",
-    "Ana", "Forense", "DNI", "Perú", "Licenciatura", "Instituto de prueba", "Perito", true, true);
+    "Ana", "Forense", "DNI", "Perú", "Licenciatura", "Instituto de prueba", "Perito", true, true, new DateOnly(1996,2,29));
 var registered = await sender.Send(new AuthRegisterCommand(registration));
 Check(registered.Outcome == ResultOutcome.Success && await db.Users.CountAsync() == 1, "Registro real mediante ISender y handler");
 var student = await db.Users.SingleAsync(); actor.UserId = student.Id;
 Check(student.PasswordHash != registration.Password && new PasswordService().Verify(registration.Password, student.PasswordHash), "Contraseña pasa por adaptador BCrypt");
+Check((await sender.Send(new AuthLoginCommand(new LoginRequest(registration.Email, registration.Password)))).Outcome==ResultOutcome.Forbidden,"Registro nuevo exige confirmar el correo antes del login");
+student.EmailConfirmedAt=DateTime.UtcNow;await db.SaveChangesAsync();
 var login = await sender.Send(new AuthLoginCommand(new LoginRequest(registration.Email, registration.Password)));
 Check(login.Outcome == ResultOutcome.Success, "Login mediante MediatR y adaptador de token");
 Check((await sender.Send(new CoursesGetByIdQuery("missing"))).Outcome == ResultOutcome.NotFound, "Curso inexistente devuelve NotFound");
@@ -126,3 +130,5 @@ sealed class TestImageStorage:IImageStorage {
 }
 
 sealed class DisabledGoogle:IGoogleIdentityValidator{public bool Enabled=>false;public Task<GoogleIdentity?> ValidateAsync(string credential,string nonce,CancellationToken ct)=>Task.FromResult<GoogleIdentity?>(null);}
+
+sealed class TestConfirmation:IEmailConfirmation{public Task<ConfirmationDelivery> SendInitialAsync(User u,CancellationToken ct)=>Task.FromResult(ConfirmationDelivery.Sent);public Task RequestAsync(string e,CancellationToken ct)=>Task.CompletedTask;public Task<bool> ConfirmAsync(string t,CancellationToken ct)=>Task.FromResult(false);}

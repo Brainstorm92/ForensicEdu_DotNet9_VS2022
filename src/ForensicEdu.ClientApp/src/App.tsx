@@ -1,3 +1,5 @@
+import {NotificationProvider} from './context/NotificationContext';
+import {StudentNotifications} from './components/StudentNotifications';
 import { DataStatus } from './components/DataStatus';
 import React from 'react';
 import { AccountAccess } from './components/AccountAccess';
@@ -22,6 +24,7 @@ const MainContent: React.FC = () => {
       {activeTab === 'mis-certificados' && <StudentDashboard currentSubTab="mis-certificados" />}
       {activeTab === 'mis-pagos' && <StudentDashboard currentSubTab="mis-pagos" />}
       {activeTab === 'mis-consultas' && <StudentDashboard currentSubTab="mis-consultas" />}
+      {activeTab === 'notificaciones' && <StudentNotifications />}
       {activeTab === 'perfil' && <StudentDashboard currentSubTab="perfil" />}
       {activeTab === 'admin' && <AdminPanel />}
       {activeTab === 'verificador-publico' && <PublicQRVerifier />}
@@ -31,7 +34,7 @@ const MainContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
+    <NotificationProvider><AppProvider>
       <div className="min-h-screen bg-canvas text-ink flex flex-col font-sans selection:bg-brand selection:text-ink">
         <AccountAccess />
         <Header />
@@ -42,6 +45,6 @@ export default function App() {
         <Footer />
         <FloatingSupport />
       </div>
-    </AppProvider>
+    </AppProvider></NotificationProvider>
   );
 }

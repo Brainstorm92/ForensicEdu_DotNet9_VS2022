@@ -15,6 +15,9 @@ public interface IApplicationDbContext : IUnitOfWork
     DbSet<CourseModule> CourseModules { get; }
     DbSet<LiveEvent> LiveEvents { get; }
     DbSet<AdvisoryService> AdvisoryServices { get; }
+    DbSet<AdvisoryCase> AdvisoryCases { get; }
+    DbSet<AdvisorySession> AdvisorySessions { get; }
+    DbSet<AdvisoryCareHistory> AdvisoryCareHistory { get; }
     DbSet<Order> Orders { get; }
     DbSet<PaymentEvidence> PaymentEvidences { get; }
     DbSet<Enrollment> Enrollments { get; }
@@ -22,6 +25,7 @@ public interface IApplicationDbContext : IUnitOfWork
     DbSet<DigitalCertificate> DigitalCertificates { get; }
     DbSet<CertificateVerificationLog> CertificateVerificationLogs { get; }
     DbSet<AuditLog> AuditLogs { get; }
+    DbSet<StudentNotification> StudentNotifications { get; }
     DbSet<SupportTicket> SupportTickets { get; }
     DbSet<SystemSocialSetting> SystemSocialSettings { get; }
 

@@ -17,6 +17,11 @@ public partial class User
     public string? GoogleSubject { get; set; }
     public string? Username { get; set; }
     public string Email { get; set; } = string.Empty;
+    public DateOnly? BirthDate { get; set; }
+    public bool EmailConfirmationRequired { get; set; }
+    public DateTime? EmailConfirmedAt { get; set; }
+    public string EmailConfirmationStamp { get; set; } = Guid.NewGuid().ToString();
+    public DateTime? EmailConfirmationSentAt { get; set; }
     public string PasswordHash { get; set; } = string.Empty;
     public string Telefono { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;

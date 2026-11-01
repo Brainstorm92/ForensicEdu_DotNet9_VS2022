@@ -1,0 +1,10 @@
+using System.Text.Json.Serialization;
+namespace ForensicEdu.Application.Contracts.AdvisoryCare;
+public record CareAssignment(string ConsultantId,string Version);
+public record CareUpdate(string Status,DateTime? ScheduledAt,string Summary,string InternalNotes,string Version);
+public record CareSessionInput(DateTime ScheduledAt,int DurationMinutes,string Status,string Summary,string InternalNotes,string Version);
+public record ConsultantOption(string Id,string Name,string Email);
+public record CareSummary(string Id,string OrderId,string OrderCode,string Title,string StudentId,string StudentName,string StudentEmail,string StudentPhone,string? ConsultantId,string? ConsultantName,string? ConsultantPhone,string Status,DateTime? ScheduledAt,int SessionCount,DateTime UpdatedAt,string Version);
+public record CareSessionDto(string Id,DateTime ScheduledAt,int DurationMinutes,string Status,string Summary,[property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingNull)] string? InternalNotes);
+public record CareHistoryDto(DateTime CreatedAt,string Action,string Details,string Actor);
+public record CareDetail(CareSummary Case,string Summary,[property:JsonIgnore(Condition=JsonIgnoreCondition.WhenWritingNull)] string? InternalNotes,bool CanManage,bool CanAssign,List<CareSessionDto> Sessions,List<CareHistoryDto> History);
