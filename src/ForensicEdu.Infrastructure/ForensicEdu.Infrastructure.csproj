@@ -6,6 +6,7 @@
     <RootNamespace>ForensicEdu.Infrastructure</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup><EmbeddedResource Include="Persistence/Schema/20261031_AdvisoryCare.sql" /><EmbeddedResource Include="Persistence/Schema/20261031_RegistrationEmail.sql" /><EmbeddedResource Include="Persistence/Schema/20261101_StudentNotifications.sql" /></ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ForensicEdu.Domain\ForensicEdu.Domain.csproj" />
     <ProjectReference Include="..\ForensicEdu.Application\ForensicEdu.Application.csproj" />

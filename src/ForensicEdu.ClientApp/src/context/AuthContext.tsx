@@ -6,10 +6,11 @@ import type { UserProfile, UserRole } from '../types';
 export interface Registration {
   nombres: string; apellidos: string; email: string; dni: string; phone: string; password: string;
   tipoDocumento: string; paisResidencia: string; nivelEducativo: string; institucionEducativa: string;
-  profesion: string; acceptTerms: boolean; acceptPrivacy: boolean;
+  profesion: string; birthDate: string; acceptTerms: boolean; acceptPrivacy: boolean;
 }
+export interface RegistrationResult {userId:string;message:string;confirmationRequired:boolean;emailSent:boolean}
 interface AccountDto {
-  id: string; nombres: string; apellidos: string; fullName: string; email: string; dni: string; phone: string;
+  id: string; nombres: string; apellidos: string; fullName: string; email: string; dni: string; phone: string; birthDate?:string|null;
   tipoDocumento: UserProfile['tipoDocumento']; paisResidencia: string; nivelEducativo: UserProfile['nivelEducativo'];
   institucionEducativa: string; profesion: string; role: number; status: number; registeredAt: string;
   validUntil: string; hasApprovedPurchase: boolean; lastPurchaseDate?: string;
@@ -19,7 +20,7 @@ export const accountRequest = apiRequest<any>;
 const roles: UserRole[] = ['estudiante', 'superadmin', 'admin_academico', 'admin_financiero', 'docente', 'soporte', 'estudiante', 'consultor'];
 export function profile(dto: AccountDto): UserProfile {
   return { id: dto.id, nombres: dto.nombres || dto.fullName, apellidos: dto.apellidos || '',
-    email: dto.email, numeroDocumento: dto.dni, telefono: dto.phone, tipoDocumento: dto.tipoDocumento,
+    birthDate: dto.birthDate||undefined, email: dto.email, numeroDocumento: dto.dni, telefono: dto.phone, tipoDocumento: dto.tipoDocumento,
     paisResidencia: dto.paisResidencia, nivelEducativo: dto.nivelEducativo,
     institucionEducativa: dto.institucionEducativa, profesion: dto.profesion,
     role: roles[dto.role] || 'estudiante', createdAt: dto.registeredAt, validUntil: dto.validUntil || '',
@@ -29,7 +30,7 @@ export function profile(dto: AccountDto): UserProfile {
 export interface GoogleAuthResult {token?:string;requiresRegistration:boolean;requiresLinkPassword:boolean;email:string;nombres:string;apellidos:string;message:string;}
 interface AuthState {
   user: UserProfile | null;
-  register: (data: Registration) => Promise<string>;
+  register: (data: Registration) => Promise<RegistrationResult>;
   login: (email: string, password: string) => Promise<void>;
   googleLogin:(credential:string,profile?:Omit<Registration,'email'|'password'>,linkPassword?:string)=>Promise<GoogleAuthResult>;
   refresh: () => Promise<void>;
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (data: Registration) => {
     const result = await accountRequest('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...data, fullName: `${data.nombres} ${data.apellidos}` }) });
-    return result.userId as string;
+    return result as RegistrationResult;
   };
   const login = async (email: string, password: string) => {
     setAccessToken(null); setUser(null);

@@ -7,11 +7,11 @@
 **/dist
 **/wwwroot
 **/App_Data
+**/.env
+**/.env.*
 **/appsettings.Local.json
 **/appsettings.Development.json
 **/secrets.json
-**/.env
-**/.env.*
 **/*.pfx
 **/*.key
 **/*.user

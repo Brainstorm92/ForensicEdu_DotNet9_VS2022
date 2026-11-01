@@ -6,7 +6,7 @@ using ForensicEdu.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 namespace ForensicEdu.Application.Handlers.Auth.Commands.Register;
 
-public sealed class AuthRegisterCommandHandler(IApplicationDbContext _context, IPasswordService passwords, IPersistenceErrors errors) : IRequestHandler<AuthRegisterCommand, ApplicationResult>
+public sealed class AuthRegisterCommandHandler(IApplicationDbContext _context, IPasswordService passwords, IPersistenceErrors errors, IEmailConfirmation confirmation) : IRequestHandler<AuthRegisterCommand, ApplicationResult>
 {
     public async Task<ApplicationResult> Handle(AuthRegisterCommand message, CancellationToken cancellationToken)
     {
@@ -27,7 +27,7 @@ public sealed class AuthRegisterCommandHandler(IApplicationDbContext _context, I
             TipoDocumento = request.TipoDocumento, NumeroDocumento = document,
             PaisResidencia = request.PaisResidencia.Trim(), NivelEducativo = request.NivelEducativo,
             InstitucionEducativa = request.InstitucionEducativa.Trim(), Profesion = request.Profesion.Trim(),
-            Email = email,
+            Email = email, BirthDate = request.BirthDate, EmailConfirmationRequired = true,
             Dni = document,
             Phone = request.Phone.Trim(), Telefono = request.Phone.Trim(),
             PasswordHash = passwords.Hash(request.Password),
@@ -49,6 +49,12 @@ public sealed class AuthRegisterCommandHandler(IApplicationDbContext _context, I
             return ApplicationResult.Conflict(new { message = "No fue posible registrar la cuenta. Compruebe si el correo ya está registrado." });
         }
 
-        return ApplicationResult.Success(new { message = "Usuario registrado exitosamente. Cuenta activa por 30 días para realizar su primera compra.", userId = user.Id });
+        var delivery = await confirmation.SendInitialAsync(user,cancellationToken);
+        var text = delivery==ConfirmationDelivery.Sent
+            ? "Cuenta creada. Revisa tu correo y confirma tu dirección antes de iniciar sesión. El enlace dura 24 horas."
+            : delivery==ConfirmationDelivery.Disabled
+                ? "Cuenta creada, pendiente de confirmar. El envío de correos está desactivado. Cuando se active, utiliza Reenviar confirmación."
+                : "Cuenta creada, pendiente de confirmar. No pudimos enviar la confirmación. Utiliza Reenviar confirmación en un minuto o contacta a soporte.";
+        return ApplicationResult.Success(new { message=text, userId=user.Id, confirmationRequired=true, emailSent=delivery==ConfirmationDelivery.Sent });
     }
 }

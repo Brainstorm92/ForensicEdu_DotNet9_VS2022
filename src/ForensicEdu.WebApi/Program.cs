@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ForensicEdu.Infrastructure.Secrets;
 using ForensicEdu.WebApi.Common;
 using ForensicEdu.WebApi.Services;
@@ -11,9 +12,16 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Scalar.AspNetCore;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.RateLimiting;
 
-var startupArgs=args.Where(x=>x!="--bootstrap-admin" && x!="--seed-demo" && x!="--provision-admin" && x!="--upgrade-media" && x!="--upgrade-google").ToArray();
+var startupArgs=args.Where(x=>x!="--upgrade-notifications" && x!="--upgrade-registration" && x!="--upgrade-advisories" && x!="--bootstrap-admin" && x!="--seed-demo" && x!="--provision-admin" && x!="--upgrade-media" && x!="--upgrade-google").ToArray();
 var builder = WebApplication.CreateBuilder(startupArgs);
+var protectionDirectory = new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataProtectionKeys"));
+protectionDirectory.Create();
+var dataProtection = builder.Services.AddDataProtection().SetApplicationName("ForensicEdu").PersistKeysToFileSystem(protectionDirectory);
+if (OperatingSystem.IsWindows()) dataProtection.ProtectKeysWithDpapi();
+builder.Services.AddEmailRateLimits();
 if (builder.Environment.IsDevelopment())
 {
     builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
@@ -93,6 +101,25 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+if(args.Contains("--upgrade-notifications"))
+{
+    using var scope=app.Services.CreateScope();
+    await ForensicEdu.Infrastructure.Persistence.StudentNotificationsSchema.ApplyAsync(scope.ServiceProvider.GetRequiredService<ForensicEdu.Infrastructure.Persistence.ApplicationDbContext>());
+    var count=await scope.ServiceProvider.GetRequiredService<ForensicEdu.Infrastructure.Persistence.ApplicationDbContext>().StudentNotifications.AsNoTracking().CountAsync();
+    Console.WriteLine($"Centro de notificaciones preparado y lectura verificada. Avisos existentes: {count}. No se enviaron correos ni se modificaron cuentas.");return;
+}
+if(args.Contains("--upgrade-registration"))
+{
+    using var scope=app.Services.CreateScope();
+    await ForensicEdu.Infrastructure.Persistence.RegistrationEmailSchema.ApplyAsync(scope.ServiceProvider.GetRequiredService<ForensicEdu.Infrastructure.Persistence.ApplicationDbContext>());
+    Console.WriteLine("Registro actualizado. Cuentas existentes conservan acceso; fechas de nacimiento no se inventaron.");return;
+}
+if(args.Contains("--upgrade-advisories"))
+{
+    using var scope=app.Services.CreateScope();
+    await ForensicEdu.Infrastructure.Persistence.AdvisoryCareSchema.ApplyAsync(scope.ServiceProvider.GetRequiredService<ForensicEdu.Infrastructure.Persistence.ApplicationDbContext>());
+    Console.WriteLine("Seguimiento de asesorías preparado. Se conservaron compras existentes y se crearon las atenciones faltantes.");return;
+}
 if(args.Contains("--upgrade-google"))
 {
     using var scope=app.Services.CreateScope();
@@ -161,6 +188,7 @@ app.UseStaticFiles();
 app.UseCors("AllowFrontendApp");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 // Hangfire Dashboard (Admin only in production)
 app.MapHangfireDashboard("/hangfire").RequireAuthorization(new Microsoft.AspNetCore.Authorization.AuthorizeAttribute { Roles = "1" });
@@ -172,6 +200,8 @@ RecurringJob.AddOrUpdate<AccountLifecycleHangfireJob>(
     Cron.Daily(0, 0)
 );
 
+RecurringJob.AddOrUpdate<ForensicEdu.Infrastructure.BackgroundJobs.NotificationEmailJob>(
+    "student-notification-emails", job => job.ExecuteAsync(), "*/2 * * * *");
 app.MapControllers();
 // Keep the SPA separate from API and documentation routes.
 

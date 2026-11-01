@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using ForensicEdu.Application.Common.Interfaces;
@@ -28,6 +29,7 @@ public class AuthController(ISender sender) : ControllerBase
     }
 
     [HttpPost("register")]
+    [EnableRateLimiting("email-verification")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         return (await sender.Send(new AuthRegisterCommand(request), HttpContext.RequestAborted)).ToActionResult();

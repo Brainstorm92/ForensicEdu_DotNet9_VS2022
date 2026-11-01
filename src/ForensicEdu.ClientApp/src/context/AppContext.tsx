@@ -13,6 +13,7 @@ interface Snapshot {courses:Course[];events:EventItem[];advisory:AdvisoryItem;or
 const blank=():Snapshot=>({courses:[],events:[],advisory:noAdvisory,orders:[],payments:[],enrollments:[],certificates:[],tickets:[],allUsers:[],auditLogs:[],socialLinks:structuredClone(emptySocials),profile:null});
 export interface BankInput {banco:Payment['banco'];numeroOperacion:string;fechaPago:string;monto:number;titularTransferencia:string;}
 interface AppState extends Snapshot {
+ selectedEnrollmentId:string|null;setSelectedEnrollmentId:(id:string|null)=>void;
  currentUser:UserProfile;activeTab:string;setActiveTab:(tab:string)=>void;selectedCourseId:string|null;setSelectedCourseId:(id:string|null)=>void;
  publicVerificationCode:string|null;setPublicVerificationCode:(code:string|null)=>void;isLoading:boolean;dataError:string;clearError:()=>void;reload:()=>Promise<void>;
  checkout:(type:ProductType,id:string,input:BankInput)=>Promise<{orderId:string;orderCode:string}>;
@@ -25,10 +26,12 @@ interface AppState extends Snapshot {
  switchUserRole:(role:UserRole)=>void;switchUserById:(id:string)=>void;simulateValidityChange:(days:number)=>void;resetAllDataToDefault:()=>void;bypassSecondAttemptWait:(id:string)=>void;resetExamForDemo:(id:string)=>void;addAuditLog:(...args:unknown[])=>void;
 }
 const Context=createContext<AppState|null>(null);
+const sectionFromEmail=()=>{const allowed=['catalogo','mis-cursos','mis-eventos','asesoria','mis-consultas','perfil','notificaciones'];const section=new URLSearchParams(window.location.hash.slice(1)).get('section');return section&&allowed.includes(section)?section:'catalogo';};
 const removed=():never=>{throw new Error('Esta función no está disponible.');};
 const can=(role:UserRole,...allowed:UserRole[])=>allowed.includes(role);
 export function AppProvider({children}:{children:React.ReactNode}) {
  const {user}=useAuth();const [data,setData]=useState<Snapshot>(blank);const [isLoading,setLoading]=useState(false);const [dataError,setError]=useState('');
+ const [selectedEnrollmentId,setSelectedEnrollmentId]=useState<string|null>(null);
  const [activeTab,setActiveTab]=useState('catalogo');const [selectedCourseId,setSelectedCourseId]=useState<string|null>(null);const [publicVerificationCode,setPublicVerificationCode]=useState<string|null>(null);const epoch=useRef(0);
  const reload=useCallback(async()=>{
   const version=++epoch.current;setLoading(true);
@@ -58,8 +61,9 @@ export function AppProvider({children}:{children:React.ReactNode}) {
   }catch(error){if(version===epoch.current)setError(error instanceof Error?error.message:'No pudimos cargar la información. Inténtalo de nuevo.');}
   finally{if(version===epoch.current)setLoading(false);}
  },[user?.id,user?.role]);
- useEffect(()=>{setData(blank());setSelectedCourseId(null);setActiveTab('catalogo');void reload();return ()=>{epoch.current++;};},[reload]);
+ useEffect(()=>{setData(blank());setSelectedCourseId(null);setSelectedEnrollmentId(null);setActiveTab(sectionFromEmail());void reload();return ()=>{epoch.current++;};},[reload]);
  useEffect(()=>{if(!user)return;const timer=setInterval(()=>{if(!document.hidden)void reload();},15000);return ()=>clearInterval(timer);},[reload,user?.id]);
+ useEffect(()=>{const openSection=()=>{if(window.location.hash.startsWith('#section='))setActiveTab(sectionFromEmail());};window.addEventListener('hashchange',openSection);return()=>window.removeEventListener('hashchange',openSection);},[]);
  const currentUser=data.profile||user||guest;
  const run=async<T,>(action:()=>Promise<T>):Promise<T>=>{setError('');try{const result=await action();await reload();return result;}catch(error){setError(error instanceof Error?error.message:'La operación no se confirmó.');throw error;}};
  const requireLogin=()=>{if(!user){window.dispatchEvent(new CustomEvent('forensicedu:open-auth'));throw new Error('Inicia sesión para continuar.');}};
@@ -71,7 +75,7 @@ export function AppProvider({children}:{children:React.ReactNode}) {
  const uploadVoucher=(orderId:string,file:File)=>run(async()=>{const form=new FormData();form.append('file',file);await apiRequest(`/orders/${orderId}/voucher`,{method:'POST',body:form});});
  const createTicket=(subject:string,category:SupportTicket['category'],message:string)=>run(async()=>{requireLogin();return map.ticket(await apiRequest<dto.TicketDto>('/student/tickets',jsonRequest('POST',{subject,category,message})));});
  const updateProfile=(changes:Partial<UserProfile>)=>run(async()=>{const p={...currentUser,...changes};await apiRequest('/auth/me',jsonRequest('PUT',{nombres:p.nombres,apellidos:p.apellidos,phone:p.telefono,paisResidencia:p.paisResidencia,nivelEducativo:p.nivelEducativo,institucionEducativa:p.institucionEducativa,profesion:p.profesion}));});
- return <Context.Provider value={{...data,currentUser,activeTab,setActiveTab,selectedCourseId,setSelectedCourseId,publicVerificationCode,setPublicVerificationCode,isLoading,dataError,clearError:()=>setError(''),reload,
+ return <Context.Provider value={{...data,selectedEnrollmentId,setSelectedEnrollmentId,currentUser,activeTab,setActiveTab,selectedCourseId,setSelectedCourseId,publicVerificationCode,setPublicVerificationCode,isLoading,dataError,clearError:()=>setError(''),reload,
   checkout,uploadVoucher,reviewPayment,updateCurrentUserProfile:updateProfile,
   updateModuleProgress:(id,module)=>run(async()=>{await apiRequest(`/student/enrollments/${id}/modules/${module}/complete`,jsonRequest('PUT'));}),
   updateCertificateStatus:(id,status,reason)=>run(async()=>{const cert=data.certificates.find(x=>x.id===id);if(!cert)throw new Error('Certificado no encontrado.');if(status!=='REVOCADO')throw new Error('Solo está disponible la revocación administrativa.');await apiRequest(`/admin/certificates/${encodeURIComponent(cert.certificateCode)}/revoke`,jsonRequest('POST',{reason:reason||'Revocación administrativa'}));}),

@@ -1,3 +1,5 @@
+import {currentEnrollment,canReenroll} from '../services/enrollmentCycles';
+import {OrderAndPaymentModal} from './OrderAndPaymentModal';
 import {ProtectedDocumentViewer} from './ProtectedDocumentViewer';
 import {ModuleVideo} from './ModuleVideo';
 import {useEffect,useState} from 'react';
@@ -5,12 +7,14 @@ import {useApp} from '../context/AppContext';
 import {apiRequest} from '../services/apiTransport';
 import {ExamModal} from './ExamModal';
 import {button,secondary,Panel,Empty,Notice,message} from './PlatformUi';
-export function VirtualClassroom({courseId,onBack}:{courseId:string;onBack:()=>void}){
- const {courses,enrollments,currentUser,updateModuleProgress,setActiveTab}=useApp();const course=courses.find(x=>x.id===courseId);const enrollment=enrollments.find(x=>x.courseId===courseId&&x.userId===currentUser.id);
+export function VirtualClassroom({courseId,enrollmentId,onBack}:{courseId:string;enrollmentId?:string|null;onBack:()=>void}){
+ const {courses,enrollments,currentUser,updateModuleProgress,setActiveTab}=useApp();const course=courses.find(x=>x.id===courseId);const enrollment=enrollmentId?enrollments.find(x=>x.id===enrollmentId&&x.courseId===courseId&&x.userId===currentUser.id):currentEnrollment(enrollments,currentUser.id,courseId);
+ const [repurchase,setRepurchase]=useState(false);
  const [documentId,setDocumentId]=useState('');const [active,setActive]=useState('');const [exam,setExam]=useState(false);const [error,setError]=useState('');const [busy,setBusy]=useState(false);const [video,setVideo]=useState('');
  useEffect(()=>{if(!active&&course?.modules[0])setActive(course.modules[0].id);},[course,active]);
  useEffect(()=>{setVideo('');setError('');setDocumentId('');},[active]);
  if(!course||!enrollment)return <div className="max-w-4xl mx-auto p-6"><Empty>Tu matrícula estará disponible cuando se apruebe el pago.</Empty><button className={secondary} onClick={onBack}>Volver</button></div>;
+ if(enrollment.status!=='ACTIVA'&&enrollment.status!=='COMPLETADA')return <div className="responsive-page max-w-4xl mx-auto p-6 space-y-4"><Notice>Esta matrícula está cerrada y conserva su historial. Abre tu matrícula vigente desde Mis cursos.</Notice><button className={secondary} onClick={onBack}>Volver a mis cursos</button></div>;
  const module=course.modules.find(x=>x.id===active);const moduleIndex=course.modules.findIndex(x=>x.id===active);const unlocked=course.modules.slice(0,moduleIndex).every(x=>enrollment.completedModules.includes(x.id));const approved=enrollment.examStatus==='APROBADA';const exhausted=enrollment.attemptsUsed>=2;const waiting=!!enrollment.secondAttemptAvailableAt&&new Date(enrollment.secondAttemptAvailableAt).getTime()>Date.now();
  const action=async(work:()=>Promise<void>)=>{setBusy(true);setError('');try{await work();}catch(err){setError(message(err));}finally{setBusy(false);}};
  return <div className="responsive-page max-w-7xl w-full mx-auto px-4 py-6 space-y-5">
@@ -23,8 +27,8 @@ export function VirtualClassroom({courseId,onBack}:{courseId:string;onBack:()=>v
  {module.documents.map(doc=><div key={doc.id} className="flex justify-between gap-3 border-t border-line pt-3"><span>{doc.title} · {doc.type}</span><button className={secondary} onClick={()=>setDocumentId(doc.id)}>Ver material</button></div>)}
  </>:<p>No hay módulos configurados.</p>}</Panel>
  <Panel><h2 className="text-lg font-bold">Evaluación</h2><p className="text-muted">Tienes 10 minutos y un máximo de dos intentos. La nota mínima para aprobar es 13/20.</p>
- {approved?<><Notice>Curso aprobado: {enrollment.finalScore}/20.</Notice><button className={button} onClick={()=>setActiveTab('mis-certificados')}>Ver certificado</button></>:exhausted?<Notice error>Agotaste los dos intentos. No se emitió un certificado.</Notice>:waiting?<Notice>Reevaluación disponible el {new Date(enrollment.secondAttemptAvailableAt!).toLocaleString()}.</Notice>:<button data-testid="start-exam" className={button} disabled={enrollment.progressPercent<100||busy} onClick={()=>setExam(true)}>Rendir evaluación (10 minutos)</button>}
+ {approved?<><Notice>Curso aprobado: {enrollment.finalScore}/20.</Notice><button className={button} onClick={()=>setActiveTab('mis-certificados')}>Ver certificado</button></>:exhausted?<><Notice error>Agotaste los dos intentos. No se emitió un certificado. Puedes solicitar una nueva matrícula con un nuevo pago aprobado.</Notice>{canReenroll(enrollment)&&course.isActive!==false&&course.isPublished!==false&&<button className={button} onClick={()=>setRepurchase(true)}>Solicitar nueva matrícula</button>}</>:waiting?<Notice>Reevaluación disponible el {new Date(enrollment.secondAttemptAvailableAt!).toLocaleString()}.</Notice>:<button data-testid="start-exam" className={button} disabled={enrollment.progressPercent<100||busy} onClick={()=>setExam(true)}>Rendir evaluación (10 minutos)</button>}
  {enrollment.progressPercent<100&&<p className="text-sm text-muted">Completa los módulos para habilitar la evaluación.</p>}</Panel></div>
  <Panel><h2 className="text-lg font-bold">Módulos del curso</h2>{course.modules.map((m,i)=><button key={m.id} className={`${m.id===active?button:secondary} w-full text-left justify-start`} onClick={()=>setActive(m.id)}>{i+1}. {m.title}{enrollment.completedModules.includes(m.id)?' ✓':''}</button>)}</Panel>
- </div>{documentId&&<ProtectedDocumentViewer enrollmentId={enrollment.id} documentId={documentId} onClose={()=>setDocumentId('')}/ >}{exam&&<ExamModal enrollment={enrollment} courseTitle={course.title} onClose={()=>setExam(false)}/>}</div>;
+ </div>{repurchase&&<OrderAndPaymentModal item={course} productType="curso" reenrollment onClose={()=>setRepurchase(false)}/ >}{documentId&&<ProtectedDocumentViewer enrollmentId={enrollment.id} documentId={documentId} onClose={()=>setDocumentId('')}/ >}{exam&&<ExamModal enrollment={enrollment} courseTitle={course.title} onClose={()=>setExam(false)}/>}</div>;
 }

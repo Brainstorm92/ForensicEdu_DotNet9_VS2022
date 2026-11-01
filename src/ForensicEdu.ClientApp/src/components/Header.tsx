@@ -1,3 +1,4 @@
+import {NotificationBell} from './StudentNotifications';
 import { ThemeToggle } from './ThemeToggle';
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
@@ -185,7 +186,7 @@ export const Header: React.FC = () => {
               }`}
             >
               <Settings className="w-4 h-4 text-purple-700" />
-              <span>Panel Admin</span>
+              <span>{currentUser.role==='consultor'?'Panel de atención':'Panel Admin'}</span>
               {(pendingPaymentsCount > 0 || duplicateAlertsCount > 0) && (
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-600 text-ink animate-pulse">
                   {pendingPaymentsCount + duplicateAlertsCount}
@@ -197,6 +198,7 @@ export const Header: React.FC = () => {
 
         {/* User Badge & Profile Button */}
         <div className="flex items-center gap-3">
+          <NotificationBell />
           <ThemeToggle />
           <button type="button" className="xl:hidden inline-flex items-center justify-center min-h-11 min-w-11 rounded-xl border border-line bg-surface-low text-ink"
             aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={isMobileMenuOpen} aria-controls="mobile-navigation"
@@ -283,6 +285,7 @@ export const Header: React.FC = () => {
           </button>
         )}
         <button onClick={() => setActiveTab('perfil')} className="text-left px-3 py-2 text-muted">Mi perfil</button>
+        {authenticatedUser && <button onClick={() => setActiveTab('notificaciones')} className="text-left px-3 py-2 text-muted">Notificaciones</button>}
         <button onClick={() => setActiveTab('mis-consultas')} className="text-left px-3 py-2 text-muted">Mis consultas</button>
       </nav>
 

@@ -18,6 +18,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<CourseModule> CourseModules => Set<CourseModule>();
     public DbSet<LiveEvent> LiveEvents => Set<LiveEvent>();
     public DbSet<AdvisoryService> AdvisoryServices => Set<AdvisoryService>();
+    public DbSet<AdvisoryCase> AdvisoryCases => Set<AdvisoryCase>();
+    public DbSet<AdvisorySession> AdvisorySessions => Set<AdvisorySession>();
+    public DbSet<AdvisoryCareHistory> AdvisoryCareHistory => Set<AdvisoryCareHistory>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<PaymentEvidence> PaymentEvidences => Set<PaymentEvidence>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
@@ -25,6 +28,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<DigitalCertificate> DigitalCertificates => Set<DigitalCertificate>();
     public DbSet<CertificateVerificationLog> CertificateVerificationLogs => Set<CertificateVerificationLog>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<StudentNotification> StudentNotifications => Set<StudentNotification>();
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<SystemSocialSetting> SystemSocialSettings => Set<SystemSocialSetting>();
 
@@ -34,11 +38,32 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         modelBuilder.Entity<CourseModule>().ToTable("CourseModule");
         modelBuilder.Entity<CourseDocument>().ToTable("CourseDocument");
 
+        modelBuilder.Entity<AdvisoryCase>(e=>{
+            e.HasIndex(c=>c.OrderId).IsUnique();e.Property(c=>c.Version).IsConcurrencyToken();
+            e.HasOne(c=>c.Order).WithMany().HasForeignKey(c=>c.OrderId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(c=>c.Student).WithMany().HasForeignKey(c=>c.StudentId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(c=>c.Consultant).WithMany().HasForeignKey(c=>c.ConsultantId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(c=>c.AdvisoryService).WithMany().HasForeignKey(c=>c.AdvisoryServiceId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<AdvisorySession>().HasOne(s=>s.AdvisoryCase).WithMany(c=>c.Sessions).HasForeignKey(s=>s.AdvisoryCaseId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<AdvisoryCareHistory>().HasOne(h=>h.AdvisoryCase).WithMany(c=>c.History).HasForeignKey(h=>h.AdvisoryCaseId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<StudentNotification>(e => {
+            e.HasIndex(n => n.EventKey).IsUnique();
+            e.HasIndex(n => new { n.UserId, n.CreatedAt });
+            e.HasIndex(n => new { n.EmailStatus, n.NextEmailAttemptAt });
+            e.Property(n => n.EventKey).HasMaxLength(300);
+            e.Property(n => n.Version).IsConcurrencyToken();
+            e.HasOne(n => n.User).WithMany().HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
         // User
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.PasswordHash).IsConcurrencyToken();
+            entity.Property(e => e.BirthDate).HasColumnType("date");
+            entity.Property(e => e.EmailConfirmationStamp).IsConcurrencyToken();
+            entity.Property(e => e.EmailConfirmationSentAt).IsConcurrencyToken();
             entity.Property(e => e.Username).HasMaxLength(50);
             entity.HasIndex(e => e.Username).IsUnique();
             entity.Property(e => e.GoogleSubject).HasMaxLength(255);

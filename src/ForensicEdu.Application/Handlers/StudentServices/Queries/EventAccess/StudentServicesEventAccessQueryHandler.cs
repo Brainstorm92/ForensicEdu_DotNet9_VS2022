@@ -16,7 +16,9 @@ public sealed class StudentServicesEventAccessQueryHandler(IApplicationDbContext
         if (item == null) return ApplicationResult.NotFound();
         if (item.AccessStatus == "CANCELADO" || item.AccessStatus == "FINALIZADO" || DateTime.UtcNow < item.EventDate.AddMinutes(-15))
             return ApplicationResult.Conflict(new { message = "La sala todavía no está habilitada o el evento ha finalizado." });
-        if (string.IsNullOrWhiteSpace(item.RoomUrl)) return ApplicationResult.Unavailable( new { message = "La sala está pendiente de configuración." });
-        return ApplicationResult.Success(new { url = item.RoomUrl });
+        if (string.IsNullOrWhiteSpace(item.RoomUrl)) return ApplicationResult.Unavailable(new { message = "El evento aún no tiene un enlace de acceso configurado. Contacta a soporte o inténtalo más tarde." });
+        if (!Uri.TryCreate(item.RoomUrl.Trim(), UriKind.Absolute, out var room) || room.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(room.UserInfo))
+            return ApplicationResult.Unavailable(new { message = "El enlace del evento no es válido. Contacta a soporte." });
+        return ApplicationResult.Success(new { url = item.RoomUrl.Trim() });
     }
 }
