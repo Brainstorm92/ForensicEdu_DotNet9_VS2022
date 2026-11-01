@@ -61,6 +61,8 @@ export interface Course {
 }
 
 export interface CourseModule {
+  hasVideo?: boolean;
+  hasPrivateVideo?: boolean;
   id: string;
   title: string;
   duration: string;

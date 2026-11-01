@@ -1,6 +1,6 @@
 export type ApiEnum = number | string;
 export interface CourseDto {id:string;code?:string;shortCode?:string;title:string;category?:string;shortDescription?:string;fullDescription?:string;price:number;discountPrice?:number;academicHours:number;instructor?:string;instructorTitle?:string;instructorImageUrl?:string;modalidad?:string;requisitos?:string;imageUrl?:string;isPublished?:boolean;isActive?:boolean;modules?:ModuleDto[];}
-export interface ModuleDto {id:string;title:string;duration:string;orderIndex:number;videoStreamingUrl?:string;documents:DocumentDto[];}
+export interface ModuleDto {hasVideo?:boolean;hasPrivateVideo?:boolean;id:string;title:string;duration:string;orderIndex:number;videoStreamingUrl?:string;documents:DocumentDto[];}
 export interface DocumentDto {id:string;title:string;fileType:string;fileSize:string;}
 export interface EventDto {id:string;code:string;title:string;type:string;description:string;price:number;eventDate:string;timeSlot:string;speaker:string;speakerBio:string;accessStatus:string;bannerUrl:string;}
 export interface AdvisoryDto {id:string;title:string;specialist:string;specialty:string;description:string;price:number;whatsappContact?:string;}

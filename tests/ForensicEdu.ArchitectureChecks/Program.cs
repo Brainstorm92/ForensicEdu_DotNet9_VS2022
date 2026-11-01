@@ -51,6 +51,8 @@ services.AddScoped<IPasswordService, PasswordService>(); services.AddScoped<IPer
 services.AddScoped<ITokenService, TestToken>(); services.AddScoped<IVoucherStorage, TestStorage>();
 services.AddScoped<IPdfCertificateService, TestPdf>();
 services.AddSingleton<IDocumentStorage,ForensicEdu.Infrastructure.Documents.RustFsDocumentStorage>();services.AddSingleton<IDocumentProcessor,ForensicEdu.Infrastructure.Documents.OfficeDocumentProcessor>();services.Configure<RustFsOptions>(_=>{});
+services.AddSingleton<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>(new Microsoft.AspNetCore.DataProtection.EphemeralDataProtectionProvider());
+services.AddScoped<IVideoUploadTokens,VideoUploadTokens>();services.AddSingleton<IPrivateVideoStorage,RustFsVideoStorage>();
 services.AddSingleton<IImageStorage,TestImageStorage>();services.AddSingleton<IImageProcessor,WebImageProcessor>();
 using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 using var scope = provider.CreateScope(); var sender = scope.ServiceProvider.GetRequiredService<ISender>();

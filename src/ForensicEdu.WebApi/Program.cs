@@ -202,6 +202,7 @@ RecurringJob.AddOrUpdate<AccountLifecycleHangfireJob>(
 
 RecurringJob.AddOrUpdate<ForensicEdu.Infrastructure.BackgroundJobs.NotificationEmailJob>(
     "student-notification-emails", job => job.ExecuteAsync(), "*/2 * * * *");
+RecurringJob.AddOrUpdate<ForensicEdu.Infrastructure.BackgroundJobs.VideoStagingCleanupJob>("video-staging-cleanup",job=>job.ExecuteAsync(),"15 * * * *");
 app.MapControllers();
 // Keep the SPA separate from API and documentation routes.
 

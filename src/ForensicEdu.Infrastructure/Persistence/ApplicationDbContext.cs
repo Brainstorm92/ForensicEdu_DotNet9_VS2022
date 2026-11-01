@@ -36,6 +36,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<CourseModule>().ToTable("CourseModule");
+        modelBuilder.Entity<CourseModule>().Property(m=>m.StreamingId).IsConcurrencyToken();
+        modelBuilder.Entity<CourseModule>().Property(m=>m.VideoStreamingUrl).IsConcurrencyToken();
         modelBuilder.Entity<CourseDocument>().ToTable("CourseDocument");
 
         modelBuilder.Entity<AdvisoryCase>(e=>{
