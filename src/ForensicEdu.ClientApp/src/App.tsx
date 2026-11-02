@@ -1,3 +1,4 @@
+import {ExamWorkspace} from './components/ExamWorkspace';
 import {NotificationProvider} from './context/NotificationContext';
 import {StudentNotifications} from './components/StudentNotifications';
 import { DataStatus } from './components/DataStatus';
@@ -44,6 +45,7 @@ export default function App() {
         </div>
         <Footer />
         <FloatingSupport />
+        <ExamWorkspace />
       </div>
     </AppProvider></NotificationProvider>
   );

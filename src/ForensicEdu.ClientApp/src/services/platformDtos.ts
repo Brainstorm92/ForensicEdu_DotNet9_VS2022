@@ -11,7 +11,7 @@ export interface CertificateDto {id:string;enrollmentId:string;studentFullName:s
 export interface TicketDto {id:string;ticketCode:string;userId:string;userName:string;userEmail:string;subject:string;category:string;message:string;status:ApiEnum;createdAt:string;responsesJson:string;}
 export interface AccountDto {id:string;nombres:string;apellidos:string;fullName:string;email:string;dni:string;phone:string;role:number;status:number;validUntil?:string;hasApprovedPurchase:boolean;registeredAt:string;}
 export interface AuditDto {id:string;userId:string;userName:string;userRole:string;action:string;details:string;entityId?:string;createdAt:string;}
-export interface PublicQuestion {id:string;question:string;options:string[];}
-export interface ExamSessionDto {id:string;attemptNumber:number;startedAt:string;expiresAt:string;serverTime:string;questions:PublicQuestion[];savedAnswers:Record<string,number>;}
+export interface PublicQuestion {id:string;question:string;options:string[];allowMultiple?:boolean;}
+export interface ExamSessionDto {id:string;attemptNumber:number;startedAt:string;expiresAt:string;serverTime:string;questions:PublicQuestion[];savedAnswers:Record<string,number>;savedMultipleAnswers?:Record<string,number[]>;answerRevision:string;}
 export interface ExamResultDto {attemptId:string;attemptNumber:number;score:number;approved:boolean;status:string;certificateCode?:string;message:string;}
 export interface ClassroomDto {id:string;courseId:string;course:CourseDto;modules:ModuleDto[];}

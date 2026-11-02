@@ -27,6 +27,11 @@ static class CatalogScenario
   var invalid=await http.PostAsJsonAsync("/api/admin/events",input with {RoomUrl="http://insecure.invalid"});Check(invalid.StatusCode==HttpStatusCode.BadRequest,"Sala sin HTTPS rechazada por validación real");
   var updated=await http.PutAsJsonAsync("/api/admin/events/"+id,input with {Title="Seminario actualizado",Price=75,AccessStatus="EN_VIVO"});Check(updated.IsSuccessStatusCode,"Evento admite cambios de precio y estado");
   var listing=await http.GetFromJsonAsync<JsonElement>("/api/admin/events?search=actualizado&page=1&pageSize=20");Check(listing.GetProperty("total").GetInt32()==1,"Búsqueda administrativa devuelve evento actualizado");
+  const string cover="/api/media/images/0123456789abcdef0123456789abcdef";
+  Check((await http.PutAsJsonAsync("/api/admin/events/"+id,input with {BannerUrl=cover})).IsSuccessStatusCode,"Evento acepta referencia de portada subida con el mismo sistema de cursos");
+  var withCover=await http.GetFromJsonAsync<JsonElement>("/api/admin/events/"+id);Check(withCover.GetProperty("bannerUrl").GetString()==cover,"Portada del evento persiste al volver a editar");
+  foreach(var unsafeCover in new[]{"javascript:alert(1)","/api/media/images/not-an-image","http://insecure.invalid/image.jpg"})Check((await http.PutAsJsonAsync("/api/admin/events/"+id,input with {BannerUrl=unsafeCover})).StatusCode==HttpStatusCode.BadRequest,"Rechaza portada inválida: "+unsafeCover.Split(':')[0]);
+  Check((await http.PutAsJsonAsync("/api/admin/events/"+id,input with {BannerUrl=""})).IsSuccessStatusCode,"Se puede quitar la portada del evento");
   using(var scope=services.CreateScope()){var db=scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();db.Orders.Add(new Order{Id="event-order",UserId="student",ProductId=id,ProductType=ProductType.EVENTO});await db.SaveChangesAsync();}
   Check((await http.DeleteAsync("/api/admin/events/"+id)).StatusCode==HttpStatusCode.NoContent,"Cancelación del evento funciona con órdenes existentes");
   using(var scope=services.CreateScope()){var db=scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();Check((await db.LiveEvents.FindAsync(id))?.AccessStatus=="CANCELADO"&&await db.Orders.AnyAsync(o=>o.Id=="event-order"),"Cancelar conserva el evento y la orden");}

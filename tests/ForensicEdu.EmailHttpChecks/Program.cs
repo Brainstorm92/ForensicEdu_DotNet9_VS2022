@@ -108,6 +108,8 @@ if(args.Contains("--reenrollment-ui")){
  app.MapGet("/api/fixture/student-token",()=>new{token=new TokenService(builder.Configuration).Create(new User{Id="student",Role=UserRole.ESTUDIANTE})});
  app.MapPut("/api/fixture/reenrollment-voucher/{id}",async(string id,ApplicationDbContext db)=>{var p=await db.PaymentEvidences.SingleAsync(p=>p.OrderId==id);p.VoucherFileHash="fixture-voucher-"+id;await db.SaveChangesAsync();return Microsoft.AspNetCore.Http.Results.NoContent();}).RequireAuthorization(new Microsoft.AspNetCore.Authorization.AuthorizeAttribute{Roles="1"});
 }
+if(args.Contains("--exam-ui")){await ExamScenario.Seed(app.Services);using(var scope=app.Services.CreateScope()){var db=scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();(await db.Enrollments.FindAsync("exam-unpaid"))!.Status="PENDIENTE";await db.SaveChangesAsync();}app.MapGet("/api/fixture/student-token",()=>new{token=new TokenService(builder.Configuration).Create(new User{Id="student",Role=UserRole.ESTUDIANTE})});}
+if(args.Contains("--payments-ui")){await StudentPaymentsScenario.Seed(app.Services,true);app.MapGet("/api/fixture/student-token",()=>new{token=new TokenService(builder.Configuration).Create(new User{Id="student",Role=UserRole.ESTUDIANTE})});}
 await app.StartAsync();
 var tokenService=new TokenService(builder.Configuration);
 var admin=tokenService.Create(new User {Id="admin-fixture",Role=(UserRole)1});
@@ -119,6 +121,8 @@ if(args.Contains("--serve"))
 }
 var url=app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
 using var http=new HttpClient {BaseAddress=new Uri(url)};
+if(args.Contains("--student-payments")){await StudentPaymentsScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}
+if(args.Contains("--exam-scenarios")){await ExamScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}
 if(args.Contains("--videos")){await VideoScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}
 if(args.Contains("--reenrollment")){await ReenrollmentScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}
 if(args.Contains("--notifications")){await NotificationScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}

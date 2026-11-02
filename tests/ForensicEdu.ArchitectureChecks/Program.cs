@@ -35,7 +35,7 @@ void Check(bool condition, string message) { if (!condition) throw new Exception
 var assembly = typeof(ForensicEdu.Application.DependencyInjection).Assembly;
 Check(!assembly.GetReferencedAssemblies().Any(a => a.Name!.StartsWith("Microsoft.AspNetCore") || a.Name == "Npgsql"), "Application no depende de HTTP ni Npgsql");
 var requests = assembly.GetTypes().Where(t => !t.IsAbstract && typeof(IRequest<ApplicationResult>).IsAssignableFrom(t)).ToArray();
-Check(requests.Length == 83, "83 comandos y consultas de MediatR descubiertos");
+Check(requests.Length == 84, "84 comandos y consultas de MediatR descubiertos");
 
 var services = new ServiceCollection();
 services.AddLogging(); services.AddApplicationServices();

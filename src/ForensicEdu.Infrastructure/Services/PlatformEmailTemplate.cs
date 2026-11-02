@@ -2,6 +2,7 @@ using System.Net;
 using ForensicEdu.Application.Common.Interfaces;
 namespace ForensicEdu.Infrastructure.Services;
 
+// Shared email branding intentionally omits the "TU CUENTA" header label for all current and future messages.
 // Inline styles and presentation tables also work when the mail client removes media queries.
 public static class PlatformEmailTemplate
 {
@@ -22,7 +23,7 @@ public static class PlatformEmailTemplate
         <div style="display:none;max-height:0;overflow:hidden;opacity:0">{{{E(message.Heading)}}}</div>
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td class="outer" align="center" style="padding:40px 20px">
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;border:1px solid #dce6e3;border-radius:20px;overflow:hidden;background:#ffffff">
-        <tr><td class="brand" style="padding:28px 40px;background:#111c2d;border-bottom:4px solid #3ddac0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td><div style="font-size:18px;font-weight:700;letter-spacing:1px;color:#ffffff">ACADEMIA <span style="color:#62e7d0">FORENSE</span></div><div style="color:#bbc9d1;font-size:11px;letter-spacing:1.7px;margin-top:8px">CIENCIA · FORMACIÓN · PRECISIÓN</div></td><td align="right" style="color:#62e7d0;font-size:10px;letter-spacing:1px">TU CUENTA</td></tr></table></td></tr>
+        <tr><td class="brand" style="padding:28px 40px;background:#111c2d;border-bottom:4px solid #3ddac0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td><div style="font-size:18px;font-weight:700;letter-spacing:1px;color:#ffffff">ACADEMIA <span style="color:#62e7d0">FORENSE</span></div><div style="color:#bbc9d1;font-size:11px;letter-spacing:1.7px;margin-top:8px">CIENCIA · FORMACIÓN · PRECISIÓN</div></td></tr></table></td></tr>
         <tr><td class="body" style="padding:38px 40px 32px"><div style="font-size:11px;color:#00796d;font-weight:700;letter-spacing:1.6px;margin-bottom:16px">{{{E(message.Category)}}}</div>
         <h1 class="title" style="font-size:32px;line-height:1.2;letter-spacing:-1px;margin:0 0 20px;color:#111c2d">{{{E(message.Heading)}}}</h1>
         <p style="font-size:15px;line-height:1.7;margin:0 0 12px">Hola,</p><p style="font-size:15px;line-height:1.7;margin:0;color:#52616c">{{{P(message.Body)}}}</p>

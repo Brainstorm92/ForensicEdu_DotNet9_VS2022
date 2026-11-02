@@ -1,8 +1,9 @@
 import {NotificationBell} from './StudentNotifications';
 import { ThemeToggle } from './ThemeToggle';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
+  ChevronDown, LogOut,
   ShieldCheck,
   BookOpen,
   Video,
@@ -25,7 +26,7 @@ import { UserRole } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 export const Header: React.FC = () => {
-  const { user: authenticatedUser } = useAuth();
+  const { user: authenticatedUser, logout } = useAuth();
   const {
     currentUser,
     allUsers,
@@ -40,6 +41,18 @@ export const Header: React.FC = () => {
   } = useApp();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const [isAccountOpen,setIsAccountOpen]=useState(false);
+  const accountRef=useRef<HTMLDivElement>(null);
+  const accountButtonRef=useRef<HTMLButtonElement>(null);
+  useEffect(()=>{
+    if(!isAccountOpen)return;
+    const outside=(event:PointerEvent)=>{if(!accountRef.current?.contains(event.target as Node))setIsAccountOpen(false);};
+    const focusOutside=(event:FocusEvent)=>{if(!accountRef.current?.contains(event.target as Node))setIsAccountOpen(false);};
+    const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'){setIsAccountOpen(false);accountButtonRef.current?.focus();}};
+    document.addEventListener('pointerdown',outside);document.addEventListener('focusin',focusOutside);document.addEventListener('keydown',escape);
+    return()=>{document.removeEventListener('pointerdown',outside);document.removeEventListener('focusin',focusOutside);document.removeEventListener('keydown',escape);};
+  },[isAccountOpen]);
 
   const pendingPaymentsCount = payments.filter(p => p.status === 'PENDIENTE' || p.status === 'EN_REVISIÓN').length;
   const duplicateAlertsCount = payments.filter(p => p.status === 'DUPLICADO').length;
@@ -197,7 +210,7 @@ export const Header: React.FC = () => {
         </nav>
 
         {/* User Badge & Profile Button */}
-        <div className="flex items-center gap-3">
+        <div className={`site-account-actions flex items-center gap-3 ${!authenticatedUser?'site-account-guest':''}`}>
           <NotificationBell />
           <ThemeToggle />
           <button type="button" className="xl:hidden inline-flex items-center justify-center min-h-11 min-w-11 rounded-xl border border-line bg-surface-low text-ink"
@@ -205,9 +218,10 @@ export const Header: React.FC = () => {
             onClick={() => setIsMobileMenuOpen(open => !open)}>
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <button
-            onClick={() => setActiveTab('perfil')}
-            className={`hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all text-left ${
+          {authenticatedUser ? <div ref={accountRef} className="relative min-w-0"><button type="button" ref={accountButtonRef}
+            aria-expanded={isAccountOpen} aria-controls="account-options" aria-label={`Cuenta de ${currentUser.nombres}`}
+            onClick={() => {setIsAccountOpen(open=>!open);setIsMobileMenuOpen(false);}}
+            className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all text-left ${
               activeTab === 'perfil'
                 ? 'bg-surface-low border-brand/50 shadow-sm'
                 : 'bg-panel border-line/80 hover:bg-surface-low'
@@ -216,8 +230,8 @@ export const Header: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-brand/20 border border-brand/40 flex items-center justify-center text-brand font-bold text-xs">
               {currentUser.nombres.charAt(0)}{currentUser.apellidos.charAt(0)}
             </div>
-            <div className="hidden sm:block">
-              <div className="text-xs font-semibold text-ink truncate max-w-[140px]">
+            <div className="min-w-0">
+              <div className="text-xs font-semibold text-ink truncate max-w-[100px] sm:max-w-[140px]">
                 {currentUser.nombres.split(' ')[0]} {currentUser.apellidos.split(' ')[0]}
               </div>
               <div className="flex items-center gap-1.5">
@@ -226,7 +240,16 @@ export const Header: React.FC = () => {
                 </span>
               </div>
             </div>
+            <ChevronDown size={16} className={isAccountOpen?'rotate-180 transition-transform':'transition-transform'} aria-hidden="true"/>
           </button>
+          {isAccountOpen&&<nav id="account-options" aria-label="Opciones de cuenta" className="absolute right-0 top-full mt-2 w-52 max-w-[calc(100vw-2rem)] rounded-xl border border-line bg-panel p-1.5 shadow-xl">
+            <button type="button" className="flex items-center gap-2 w-full rounded-lg px-3 py-2.5 text-sm text-ink hover:bg-surface-low text-left" onClick={()=>{setActiveTab('perfil');setIsAccountOpen(false);accountButtonRef.current?.focus();}}><UserCheck size={17}/>Mi perfil</button>
+            <button type="button" className="flex items-center gap-2 w-full rounded-lg px-3 py-2.5 text-sm text-ink hover:bg-surface-low text-left border-t border-line" onClick={()=>{setIsAccountOpen(false);setIsMobileMenuOpen(false);setSelectedCourseId(null);setActiveTab('catalogo');logout();}}><LogOut size={17}/>Cerrar sesión</button>
+          </nav>}
+          </div> : <div className="flex flex-wrap items-center gap-2" aria-label="Acceso a la cuenta">
+            <button type="button" className="auth-secondary" onClick={()=>window.dispatchEvent(new CustomEvent('forensicedu:open-auth',{detail:{mode:'login'}}))}>Iniciar sesión</button>
+            <button type="button" className="auth-primary" onClick={()=>window.dispatchEvent(new CustomEvent('forensicedu:open-auth',{detail:{mode:'register'}}))}>Crear cuenta</button>
+          </div>}
         </div>
       </div>
 

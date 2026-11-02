@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiRequest, setAccessToken } from '../services/apiTransport';
+import { apiRequest, setAccessToken, hasAccessToken } from '../services/apiTransport';
 export { authHeaders } from '../services/apiTransport';
 import type { UserProfile, UserRole } from '../types';
 
@@ -29,6 +29,7 @@ export function profile(dto: AccountDto): UserProfile {
 }
 export interface GoogleAuthResult {token?:string;requiresRegistration:boolean;requiresLinkPassword:boolean;email:string;nombres:string;apellidos:string;message:string;}
 interface AuthState {
+  isRestoring:boolean;
   user: UserProfile | null;
   register: (data: Registration) => Promise<RegistrationResult>;
   login: (email: string, password: string) => Promise<void>;
@@ -39,6 +40,8 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [isRestoring,setRestoring]=useState(hasAccessToken);
+  useEffect(()=>{if(!hasAccessToken()){setRestoring(false);return;}let live=true;apiRequest<AccountDto>('/auth/me',{signal:AbortSignal.timeout(12000)}).then(value=>{if(live)setUser(profile(value));}).catch(()=>{if(live){setAccessToken(null);setUser(null);}}).finally(()=>{if(live)setRestoring(false);});return()=>{live=false;};},[]);
   useEffect(()=>{const expired=()=>setUser(null);window.addEventListener('forensicedu:session-expired',expired);return ()=>window.removeEventListener('forensicedu:session-expired',expired);},[]);
   const refresh = async () => { setUser(profile(await accountRequest('/auth/me'))); };
   const register = async (data: Registration) => {
@@ -57,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if(result.token){setAccessToken(result.token);try{await refresh();}catch(error){setAccessToken(null);setUser(null);throw error;}}return result;
   };
   const logout = () => { setAccessToken(null); setUser(null); };
-  return <AuthContext.Provider value={{ user, register, login, googleLogin, refresh, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, isRestoring, register, login, googleLogin, refresh, logout }}>{children}</AuthContext.Provider>;
 }
 export function useAuth() {
   const auth = useContext(AuthContext);

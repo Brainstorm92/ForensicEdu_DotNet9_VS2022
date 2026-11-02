@@ -10,6 +10,6 @@ public sealed class EventInputValidator : AbstractValidator<EventInput>
         RuleFor(x=>x.EventDate).Must(d=>d != default && d.Kind==DateTimeKind.Utc).WithMessage("Use una fecha UTC, por ejemplo 2026-12-01T14:00:00Z.");
         RuleFor(x=>x.TimeSlot).NotEmpty().MaximumLength(100); RuleFor(x=>x.Speaker).NotEmpty().MaximumLength(200);
         RuleFor(x=>x.SpeakerBio).NotNull().MaximumLength(5000); RuleFor(x=>x.RoomUrl).Must(InputUrls.HttpsOrEmpty);
-        RuleFor(x=>x.BannerUrl).Must(InputUrls.HttpsOrEmpty); RuleFor(x=>x.AccessStatus).Must(s=>s is "PROGRAMADO" or "EN_VIVO" or "FINALIZADO" or "CANCELADO");
+        RuleFor(x=>x.BannerUrl).Must(InputUrls.ImageOrEmpty).WithMessage("Selecciona una portada o utiliza una URL HTTPS válida."); RuleFor(x=>x.AccessStatus).Must(s=>s is "PROGRAMADO" or "EN_VIVO" or "FINALIZADO" or "CANCELADO");
     }
 }

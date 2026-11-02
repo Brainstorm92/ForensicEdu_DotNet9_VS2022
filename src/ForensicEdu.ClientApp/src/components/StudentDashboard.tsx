@@ -1,3 +1,4 @@
+import {StudentPayments} from './StudentPayments';
 import {EnrollmentCycles} from './EnrollmentCycles';
 import {AdvisoryCareBoard} from './advisories/AdvisoryCareBoard';
 import {StudentEvents} from './StudentEvents';
@@ -16,11 +17,12 @@ export function StudentDashboard({currentSubTab}:{currentSubTab:'mis-cursos'|'mi
  const act=async(work:()=>Promise<void>,success='')=>{setError('');setNotice('');setBusy(true);try{await work();setNotice(success);}catch(err){setError(message(err));}finally{setBusy(false);}};
  if(!user)return <div className="max-w-4xl mx-auto p-6"><Empty>Inicia sesión para ver tus cursos y actividades.</Empty><button className={button} onClick={()=>window.dispatchEvent(new CustomEvent('forensicedu:open-auth'))}>Iniciar sesión</button></div>;
  if(currentSubTab==='mis-cursos'&&selectedCourseId)return <VirtualClassroom key={selectedEnrollmentId||selectedCourseId} courseId={selectedCourseId} enrollmentId={selectedEnrollmentId} onBack={()=>{setSelectedCourseId(null);setSelectedEnrollmentId(null);}}/>;
- const certificate=certificates.find(x=>x.id===selectedCert);if(certificate)return <CertificateView certificate={certificate} onBack={()=>setSelectedCert(null)}/>;
+ const certificate=currentSubTab==='mis-certificados'?certificates.find(x=>x.id===selectedCert):undefined;if(certificate)return <CertificateView certificate={certificate} onBack={()=>setSelectedCert(null)}/>;
  const myCourses=enrollments.filter(x=>x.userId===user.id);const myPayments=payments.filter(x=>x.userId===user.id);const myCerts=certificates.filter(x=>x.userId===user.id);const myTickets=tickets.filter(x=>x.userId===user.id);
  const titles={'mis-cursos':'Mis cursos','mis-eventos':'Mis eventos y congresos en vivo','mis-certificados':'Mis certificados','mis-pagos':'Mis pagos','asesoria':'Mis asesorías','mis-consultas':'Mis consultas','perfil':'Mi perfil'};
  return <div className="responsive-page w-full max-w-7xl mx-auto px-4 py-6 space-y-5"><div className="flex flex-wrap justify-between gap-3"><h1 className="text-2xl font-bold flex items-start gap-2">{currentSubTab==='mis-eventos'&&<CalendarDays className="text-brand shrink-0 mt-0.5" size={26}/>}<span>{titles[currentSubTab]}</span></h1><button className={secondary} onClick={()=>setActiveTab('catalogo')}>Ver catálogo</button></div><Notice error>{error}</Notice><Notice>{notice}</Notice>
  {currentSubTab==='mis-cursos'&&<EnrollmentCycles/>}
+ {currentSubTab==='mis-pagos'&&<StudentPayments payments={myPayments} loading={ctx.isLoading} error={ctx.dataError} onRefresh={()=>void ctx.reload()}/>}
  {currentSubTab==='mis-certificados'&&(!myCerts.length?<Empty>Aún no tienes certificados. Obtendrás uno al aprobar la evaluación de un curso.</Empty>:<div className="grid sm:grid-cols-2 gap-5">{myCerts.map(c=><Panel key={c.id}><h2 className="font-bold">{c.courseTitle}</h2><p>{c.finalScore}/20 · {c.status}</p><p className="text-xs font-mono break-all">{c.certificateCode}</p><div className="flex flex-wrap gap-3"><button className={secondary} onClick={()=>setSelectedCert(c.id)}>Ver certificado</button><button className={button} disabled={busy||c.status!=='VÁLIDO'} onClick={()=>void act(()=>downloadFile(`/certificates/download/${encodeURIComponent(c.certificateCode)}/pdf`,`${c.certificateCode}.pdf`))}>Descargar PDF</button></div></Panel>)}</div>)}
  {currentSubTab==='mis-eventos'&&<StudentEvents events={events} orders={orders} userId={user.id}/>}
  {currentSubTab==='asesoria'&&<AdvisoryCareBoard mode="student"/>}
