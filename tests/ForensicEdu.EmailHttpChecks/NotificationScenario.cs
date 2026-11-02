@@ -100,6 +100,8 @@ static class NotificationScenario
   Check(!html.Contains("<script>")&&!html.Contains("<img src=x>")&&html.Contains("&lt;script&gt;"),"Plantilla codifica títulos y mensajes para impedir HTML inyectado");
   Check(!html.Contains("¿El botón")&&!html.Contains("Tu cuenta, tu progreso")&&html.Contains("#reset-password=fake"),"Diseño aprobado conserva acción y omite el pie descartado");
   Check(!PlatformEmailTemplate.Render(new("X","Y","Abrir","javascript:alert(1)")).Contains("href="),"Plantilla rechaza enlaces no HTTP/HTTPS");
+  foreach(var category in new[]{"COMPRA Y MATRÍCULA","RECUPERACIÓN DE ACCESO","CONFIRMACIÓN DE CUENTA"})
+   Check(!PlatformEmailTemplate.Render(new("Aviso","Mensaje",Category:category)).Contains("TU CUENTA",StringComparison.OrdinalIgnoreCase),"Cabecera sin TU CUENTA: "+category);
   Directory.CreateDirectory(".artifacts/notification-preview");await File.WriteAllTextAsync(".artifacts/notification-preview/recuperacion.html",PlatformEmailTemplate.Render(new("Vuelve a tu formación.","Recibimos una solicitud para restablecer la contraseña de tu cuenta. Usa el siguiente botón para crear una nueva y continuar aprendiendo.","Restablecer mi contraseña","https://example.invalid/#reset-password=ejemplo","Válido durante 30 minutos\nEste enlace solo puede utilizarse una vez.","Si no solicitaste este cambio, puedes ignorar este correo. Tu contraseña actual seguirá siendo la misma.","RECUPERACIÓN DE ACCESO")));
   Console.WriteLine($"{count} comprobaciones de notificaciones superadas. Solo memoria y correo simulado.");
  }
