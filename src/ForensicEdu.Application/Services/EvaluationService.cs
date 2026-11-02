@@ -15,13 +15,15 @@ namespace ForensicEdu.Application.Services;
 public class EvaluationService : IEvaluationService
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICoursePurchaseGate? _gate;
 
-    public EvaluationService(IApplicationDbContext context)
+    public EvaluationService(IApplicationDbContext context,ICoursePurchaseGate? gate=null)
     {
-        _context = context;
+        _context = context; _gate=gate;
     }
 
-    public async Task<ExamResultDto> SubmitExamAttemptAsync(ExamSubmissionDto submission, CancellationToken cancellationToken = default)
+    public Task<ExamResultDto> SubmitExamAttemptAsync(ExamSubmissionDto submission,CancellationToken cancellationToken=default)=>_gate==null?Submit(submission,cancellationToken):_gate.ExecuteAsync(submission.UserId,"exam",()=>Submit(submission,cancellationToken),cancellationToken);
+    private async Task<ExamResultDto> Submit(ExamSubmissionDto submission,CancellationToken cancellationToken)
     {
         var enrollment = await _context.Enrollments
             .Include(e => e.Course)
@@ -41,6 +43,7 @@ public class EvaluationService : IEvaluationService
             throw new InvalidOperationException("El curso asociado a esta matrícula no existe.");
         }
 
+        if(submission.AttemptId!=null){var requested=enrollment.ExamAttempts.FirstOrDefault(a=>a.Id==submission.AttemptId)??throw new InvalidOperationException("El intento no pertenece a esta matrícula.");if(requested.CompletedAt!=null)return ExamAnswers.Result(requested,enrollment.DigitalCertificate?.CertificateCode);}
         var existingAttempts = enrollment.ExamAttempts.Where(a => a.CompletedAt != null).OrderBy(a => a.AttemptNumber).ToList();
         var attemptCount = existingAttempts.Count;
 
@@ -61,31 +64,20 @@ public class EvaluationService : IEvaluationService
             if (firstAttempt.NextAttemptAllowedAt.HasValue && DateTime.UtcNow < firstAttempt.NextAttemptAllowedAt.Value)
             {
                 var remaining = firstAttempt.NextAttemptAllowedAt.Value - DateTime.UtcNow;
-                throw new InvalidOperationException($"Debe esperar 24 horas pedagógicas de repaso antes del 2º intento. Tiempo restante: {remaining.Hours}h {remaining.Minutes}m.");
+                throw new InvalidOperationException($"Debe esperar el periodo de repaso configurado antes del 2º intento. Tiempo restante: {remaining.Hours}h {remaining.Minutes}m.");
             }
         }
 
         var attempt = enrollment.ExamAttempts.SingleOrDefault(a => a.CompletedAt == null)
             ?? throw new InvalidOperationException("Primero debe iniciar el examen en el servidor.");
-        var answers = submission.SelectedAnswers;
-        if (DateTime.UtcNow > attempt.StartedAt.AddSeconds(AcademicPolicy.ExamDurationSeconds))
-            answers = JsonSerializer.Deserialize<Dictionary<string, int>>(attempt.AnswersJson) ?? new();
-        int totalQuestions;
-        int correctCount = 0;
-        try
-        {
-            using var doc = JsonDocument.Parse(attempt.QuestionsSnapshotJson);
-            var questions = doc.RootElement.EnumerateArray().ToList();
-            totalQuestions = questions.Count;
-            if (totalQuestions == 0) throw new InvalidOperationException("No hay preguntas configuradas.");
-            foreach (var q in questions)
-            {
-                var id = q.GetProperty("id").GetString()!;
-                if (answers.TryGetValue(id, out var selected) && selected == q.GetProperty("correctOptionIndex").GetInt32())
-                    correctCount++;
-            }
-        }
-        catch (JsonException ex) { throw new InvalidOperationException("Banco de preguntas inválido.", ex); }
+        if(submission.AttemptId!=null&&attempt.Id!=submission.AttemptId)throw new InvalidOperationException("El intento no coincide con la sesión activa.");
+        if(submission.AnswerRevision!=null&&DateTime.UtcNow<attempt.StartedAt.AddMinutes(10)&&submission.AnswerRevision!=ExamAnswers.Revision(attempt.AnswersJson))throw new ExamAnswerConflictException();
+        var answers=submission.SelectedAnswers.ToDictionary(p=>p.Key,p=>new[]{p.Value});
+        if(submission.SelectedMultipleAnswers!=null)foreach(var p in submission.SelectedMultipleAnswers)answers[p.Key]=p.Value;
+        if(DateTime.UtcNow>=attempt.StartedAt.AddSeconds(AcademicPolicy.ExamDurationSeconds))answers=ExamAnswers.Read(attempt.AnswersJson);
+        int totalQuestions;int correctCount;
+        try{ExamAnswers.Validate(attempt.QuestionsSnapshotJson,answers);var grade=ExamAnswers.Grade(attempt.QuestionsSnapshotJson,answers);totalQuestions=grade.total;correctCount=grade.correct;if(totalQuestions==0)throw new InvalidOperationException("No hay preguntas configuradas.");}
+        catch(JsonException ex){throw new InvalidOperationException("Banco de preguntas inválido.",ex);}
 
         // Scale 0 to 20
         decimal score = totalQuestions > 0 ? Math.Round(((decimal)correctCount / totalQuestions) * AcademicPolicy.MaximumScore, 2) : 0m;
@@ -190,7 +182,7 @@ public class EvaluationService : IEvaluationService
         string message = approved
             ? $"¡Felicitaciones! Has aprobado satisfactoriamente con nota {score}/20 en el Intento {currentAttemptNumber}. Tu certificado oficial {issuedCertCode} ha sido emitido con validación QR pública."
             : (currentAttemptNumber == 1
-                ? $"Has obtenido {score}/20 (Nota mínima aprobatoria: 13/20). Cuentas con un 2º y último intento disponible tras 24 horas pedagógicas de repaso."
+                ? $"Has obtenido {score}/20 (Nota mínima aprobatoria: 13/20). Cuentas con un 2º y último intento disponible a partir del {nextAttemptAllowedAt:dd/MM/yyyy HH:mm} UTC."
                 : $"Has obtenido {score}/20 en el 2º intento. Has quedado en condición de DESAPROBADO DEFINITIVO sin derecho a emisión de certificado.");
 
         return new ExamResultDto(

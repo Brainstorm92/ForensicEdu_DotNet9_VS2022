@@ -1,0 +1,17 @@
+.git
+.vs
+.artifacts
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/wwwroot
+**/App_Data
+**/.env
+**/.env.*
+**/appsettings.Local.json
+**/appsettings.Development.json
+**/secrets.json
+**/*.pfx
+**/*.key
+**/*.user

@@ -1,3 +1,4 @@
+import {currentEnrollment,canReenroll} from '../services/enrollmentCycles';
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
@@ -20,7 +21,7 @@ import { Course, EventItem, AdvisoryItem, ProductType } from '../types';
 import { OrderAndPaymentModal } from './OrderAndPaymentModal';
 
 export const CatalogSection: React.FC = () => {
-  const { courses, events, advisory, enrollments, setActiveTab, setSelectedCourseId } = useApp();
+  const { courses, events, advisory, enrollments, currentUser, setActiveTab, setSelectedCourseId, setSelectedEnrollmentId } = useApp();
 
   const [activeFilter, setActiveFilter] = useState<'all' | 'cursos' | 'eventos' | 'asesoria'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,7 +45,7 @@ export const CatalogSection: React.FC = () => {
   );
 
   const isEnrolled = (courseId: string) => {
-    return enrollments.some(e => e.courseId === courseId && (e.status === 'ACTIVA' || e.status === 'COMPLETADA'));
+    const e=currentEnrollment(enrollments,currentUser.id,courseId);return !!e&&!canReenroll(e)&&(e.status==='ACTIVA'||e.status==='COMPLETADA');
   };
 
   return (
@@ -221,6 +222,7 @@ export const CatalogSection: React.FC = () => {
                         {enrolled ? (
                           <button
                             onClick={() => {
+                              setSelectedEnrollmentId(null);
                               setSelectedCourseId(course.id);
                               setActiveTab('mis-cursos');
                             }}
@@ -234,7 +236,7 @@ export const CatalogSection: React.FC = () => {
                             data-testid={`buy-${course.id}`} onClick={() => setSelectedProduct({ item: course, type: 'curso' })}
                             className="py-2 px-3 rounded-xl bg-brand hover:bg-brand text-ink text-xs font-bold transition-colors flex items-center gap-1 shadow-md shadow-brand/20"
                           >
-                            <span>Comprar</span>
+                            <span>{canReenroll(currentEnrollment(enrollments,currentUser.id,course.id))?'Nueva matrícula':'Comprar'}</span>
                             <ArrowRight className="w-3.5 h-3.5" />
                           </button>
                         )}
@@ -371,6 +373,7 @@ export const CatalogSection: React.FC = () => {
         <OrderAndPaymentModal
           item={selectedProduct.item}
           productType={selectedProduct.type}
+          reenrollment={selectedProduct.type==='curso'&&!!currentEnrollment(enrollments,currentUser.id,selectedProduct.item.id)&&canReenroll(currentEnrollment(enrollments,currentUser.id,selectedProduct.item.id)!)}
           onClose={() => setSelectedProduct(null)}
         />
       )}
@@ -447,11 +450,12 @@ export const CatalogSection: React.FC = () => {
                   onClick={() => {
                     const c = courseDetailsModal;
                     setCourseDetailsModal(null);
-                    setSelectedProduct({ item: c, type: 'curso' });
+                    if(isEnrolled(c.id)){setSelectedEnrollmentId(null);setSelectedCourseId(c.id);setActiveTab('mis-cursos');}
+                    else setSelectedProduct({ item: c, type: 'curso' });
                   }}
                   className="px-5 py-2 rounded-xl bg-brand hover:bg-brand text-ink font-bold text-xs"
                 >
-                  Comprar Curso
+                  {isEnrolled(courseDetailsModal.id)?'Entrar al aula':'Comprar Curso'}
                 </button>
               </div>
             </div>

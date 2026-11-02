@@ -10,7 +10,7 @@ export function ImageUploader({label,value,onChange,onBusyChange,disabled=false,
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)){setError('Selecciona una imagen JPG, PNG o WebP.');return;}
   if(file.size>5*1024*1024){setError('La imagen debe pesar como máximo 5 MB.');return;}
   setBusy(true);onBusyChange(true);const abort=new AbortController();control.current=abort;
-  try{const form=new FormData();form.append('file',file);const result=await apiRequest<{url:string}>('/admin/media/images',{method:'POST',body:form,signal:abort.signal});if(!abort.signal.aborted){onChange(result.url);setNotice('Imagen subida. Guarda el curso para aplicar el cambio.');}}
+  try{const form=new FormData();form.append('file',file);const result=await apiRequest<{url:string}>('/admin/media/images',{method:'POST',body:form,signal:abort.signal});if(!abort.signal.aborted){onChange(result.url);setNotice('Imagen subida. Guarda los cambios para aplicar la portada o foto.');}}
   catch(e){if(!abort.signal.aborted)setError(message(e));}
   finally{if(!abort.signal.aborted){setBusy(false);onBusyChange(false);}if(input.current)input.current.value='';}
  }

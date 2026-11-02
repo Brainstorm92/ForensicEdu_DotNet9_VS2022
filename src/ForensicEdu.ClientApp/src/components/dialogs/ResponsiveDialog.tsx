@@ -1,0 +1,10 @@
+import {useDialogViewport} from './useDialogViewport';
+import {useEffect,useRef,type ReactNode} from 'react';
+import {createPortal} from 'react-dom';
+import {X} from 'lucide-react';
+import {useDialogScrollLock} from './useDialogScrollLock';
+export function ResponsiveDialog({children,onClose,label,labelledBy,maxWidth='48rem',closeLabel='Cerrar formulario',closeDisabled=false,closeOnEscape=false}:{children:ReactNode;onClose:()=>void;label?:string;labelledBy?:string;maxWidth?:string;closeLabel?:string;closeDisabled?:boolean;closeOnEscape?:boolean}){
+ const dialog=useRef<HTMLElement>(null);useDialogScrollLock(true);useDialogViewport(dialog);
+ useEffect(()=>{const previous=document.activeElement as HTMLElement|null;const frame=requestAnimationFrame(()=>{const first=[...dialog.current!.querySelectorAll<HTMLElement>('input:not(:disabled),select:not(:disabled),textarea:not(:disabled),button:not(:disabled)')].find(el=>el.getClientRects().length);(first||dialog.current)?.focus();});return()=>{cancelAnimationFrame(frame);if(previous?.isConnected)previous.focus();};},[]);
+ return createPortal(<div className="form-overlay" onKeyDown={e=>{if(e.key==='Escape'&&closeOnEscape&&!closeDisabled){e.preventDefault();onClose();}if(e.key!=='Tab')return;const nodes=[...dialog.current!.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]')].filter(el=>el.getClientRects().length);const first=nodes[0],last=nodes.at(-1);if(!first){e.preventDefault();return;}if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}}><section ref={dialog} role="dialog" aria-modal="true" aria-label={label} aria-labelledby={labelledBy} tabIndex={-1} className="form-dialog" style={{maxWidth}}><button type="button" className="dialog-close" aria-label={closeLabel} disabled={closeDisabled} onClick={onClose}><X size={20}/></button><div className="form-dialog-content space-y-5">{children}</div></section></div>,document.body);
+}

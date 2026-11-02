@@ -1,4 +1,5 @@
 using MediatR;
+using ForensicEdu.Application.Services;
 using ForensicEdu.Application.Common.Interfaces;
 using ForensicEdu.Application.Common.Results;
 using ForensicEdu.Domain.Entities;
@@ -6,9 +7,15 @@ using ForensicEdu.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 namespace ForensicEdu.Application.Handlers.Orders.Commands.CreateOrderAndSubmitPayment;
 
-public sealed class OrdersCreateOrderAndSubmitPaymentCommandHandler(IApplicationDbContext _context, IAntifraudService _antifraudService, ICurrentUser current) : IRequestHandler<OrdersCreateOrderAndSubmitPaymentCommand, ApplicationResult>
+public sealed class OrdersCreateOrderAndSubmitPaymentCommandHandler(IApplicationDbContext _context, IAntifraudService _antifraudService, ICurrentUser current, ICoursePurchaseGate gate) : IRequestHandler<OrdersCreateOrderAndSubmitPaymentCommand, ApplicationResult>
 {
     public async Task<ApplicationResult> Handle(OrdersCreateOrderAndSubmitPaymentCommand message, CancellationToken cancellationToken)
+    {
+        return message.Request.ProductType==ProductType.CURSO && message.Request.UserId==current.UserId
+            ? await gate.ExecuteAsync(message.Request.UserId,message.Request.ProductId,()=>Process(message,cancellationToken),cancellationToken)
+            : await Process(message,cancellationToken);
+    }
+    private async Task<ApplicationResult> Process(OrdersCreateOrderAndSubmitPaymentCommand message,CancellationToken cancellationToken)
     {
         var request = message.Request;
 
@@ -36,6 +43,14 @@ public sealed class OrdersCreateOrderAndSubmitPaymentCommandHandler(IApplication
             if(pending.Order?.UserId==user.Id && pending.Order.ProductId==request.ProductId && pending.Order.ProductType==request.ProductType && pending.Amount==request.Amount)
                 return ApplicationResult.Success(new {orderId=pending.Order.Id,orderCode=pending.Order.OrderCode,status=pending.Order.Status.ToString(),message="Se reutiliza la orden pendiente de esta misma operación."});
             return ApplicationResult.Conflict(new {message="La operación bancaria ya está vinculada a otra orden pendiente."});
+        }
+        if(request.ProductType==ProductType.CURSO)
+        {
+            var eligibility=await CourseEnrollmentRules.CheckAsync(_context,user.Id,request.ProductId,cancellationToken);
+            if(!eligibility.Allowed)return ApplicationResult.Conflict(new {message=CourseEnrollmentRules.UnavailableMessage});
+            if(await _context.PaymentEvidences.AnyAsync(p=>p.Order!.UserId==user.Id && p.Order.ProductId==request.ProductId && p.Order.ProductType==ProductType.CURSO &&
+                (p.Status==PaymentStatus.PENDIENTE || p.Status==PaymentStatus.EN_REVISION || p.Status==PaymentStatus.OBSERVADO),cancellationToken))
+                return ApplicationResult.Conflict(new {message="Ya tienes un pago pendiente de revisión para este curso. Revísalo en Mis Pagos antes de registrar otra operación."});
         }
         // Rule 1: Evaluate Antifraud Fingerprint
         var antifraudCheck = await _antifraudService.EvaluatePaymentAsync(

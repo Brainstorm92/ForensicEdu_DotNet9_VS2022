@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ForensicEdu.Mobile.Core/ForensicEdu.Mobile.Core.csproj" />
+    <Project Path="src/ForensicEdu.Mobile/ForensicEdu.Mobile.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ForensicEdu.MobileChecks/ForensicEdu.MobileChecks.csproj" />
+  </Folder>
+</Solution>

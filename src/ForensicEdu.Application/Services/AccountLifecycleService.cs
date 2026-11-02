@@ -27,6 +27,9 @@ public class AccountLifecycleService : IAccountLifecycleService
         var newValidUntil = paymentDate.AddYears(2);
 
         user.RenewFromApprovedPayment(paymentDate);
+        await StudentNotifications.CancelValidityMail(_context, user.Id, cancellationToken);
+        StudentNotifications.Add(_context, user.Id, "renewal:" + user.Id + ":" + paymentDate.Ticks,
+            "CUENTA", "Tu cuenta ha sido renovada", $"Tu cuenta tiene vigencia hasta el {newValidUntil:dd/MM/yyyy}.", "perfil");
 
         _context.AuditLogs.Add(new AuditLog
         {
@@ -45,6 +48,24 @@ public class AccountLifecycleService : IAccountLifecycleService
     {
         var now = DateTime.UtcNow;
 
+        // One reminder for the current 7/3/1-day window, keyed by the actual deadline.
+        // Missed audits do not generate a burst of outdated reminders.
+        var activeStudents = await _context.Users.Where(u => u.Role == UserRole.ESTUDIANTE &&
+            (u.Status == AccountStatus.ACTIVO || u.Status == AccountStatus.REGISTRADA)).ToListAsync(cancellationToken);
+        foreach (var student in activeStudents)
+        {
+            DateTime? deadline = student.HasApprovedPurchase ? student.ValidUntil : student.RegisteredAt.AddDays(30);
+            if (!deadline.HasValue || deadline <= now || deadline > now.AddDays(7)) continue;
+            var days = Math.Max(1, (int)Math.Ceiling((deadline.Value - now).TotalDays));
+            var window = days <= 1 ? 1 : days <= 3 ? 3 : 7;
+            var key = $"validity:{student.Id}:{deadline.Value.Ticks}:{window}";
+            if (await _context.StudentNotifications.AnyAsync(n => n.EventKey == key, cancellationToken)) continue;
+            var body = student.HasApprovedPurchase
+                ? $"Tu cuenta vence el {deadline:dd/MM/yyyy}. Renueva mediante una compra con pago aprobado para continuar con tu formación."
+                : $"Tu periodo inicial de 30 días sin compras vence el {deadline:dd/MM/yyyy}. Realiza una compra y acredita el pago para activar la vigencia de dos años.";
+            StudentNotifications.Add(_context, student.Id, key, "VIGENCIA", $"Tu cuenta vence en {days} {(days == 1 ? "día" : "días")}", body, "catalogo", deadline);
+        }
+
         // Rule 1: Users registered without any purchase for more than 30 days
         var thirtyDaysAgo = now.AddDays(-30);
         var unpaidUsersToFlag = await _context.Users
@@ -53,6 +74,9 @@ public class AccountLifecycleService : IAccountLifecycleService
 
         foreach (var user in unpaidUsersToFlag)
         {
+            await StudentNotifications.CancelValidityMail(_context, user.Id, cancellationToken);
+            StudentNotifications.Add(_context, user.Id, "unpaid-expired:" + user.Id + ":" + user.RegisteredAt.Ticks,
+                "CUENTA", "Tu periodo inicial ha finalizado", "Han transcurrido 30 días sin una compra aprobada. Tu cuenta quedó pendiente de eliminación. Contacta a soporte para revisar tu situación.", "mis-consultas");
             user.Status = AccountStatus.PENDIENTE_DE_ELIMINACION;
             user.AccountStatus = user.Status;
 
@@ -69,11 +93,14 @@ public class AccountLifecycleService : IAccountLifecycleService
 
         // Rule 2: Active users whose 2-year validity expired
         var expiredUsers = await _context.Users
-            .Where(u => u.Status == AccountStatus.ACTIVO && u.ValidUntil.HasValue && u.ValidUntil.Value <= now)
+            .Where(u => u.Role == UserRole.ESTUDIANTE && u.HasApprovedPurchase && u.Status == AccountStatus.ACTIVO && u.ValidUntil.HasValue && u.ValidUntil.Value <= now)
             .ToListAsync(cancellationToken);
 
         foreach (var user in expiredUsers)
         {
+            await StudentNotifications.CancelValidityMail(_context, user.Id, cancellationToken);
+            StudentNotifications.Add(_context, user.Id, "validity-expired:" + user.Id + ":" + user.ValidUntil!.Value.Ticks,
+                "CUENTA", "La vigencia de tu cuenta ha finalizado", $"Tu cuenta venció el {user.ValidUntil:dd/MM/yyyy} y quedó suspendida temporalmente. Contacta a soporte para revisar la renovación.", "mis-consultas");
             user.Status = AccountStatus.SUSPENDIDO;
             user.AccountStatus = user.Status;
 

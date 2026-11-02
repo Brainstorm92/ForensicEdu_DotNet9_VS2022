@@ -23,6 +23,8 @@ public sealed class AuthLoginCommandHandler(IApplicationDbContext _context, ITok
             return ApplicationResult.Forbidden( new { message = "Su cuenta no tiene acceso vigente. Contacte a soporte." });
         }
 
+        if (user.EmailConfirmationRequired && !user.EmailConfirmedAt.HasValue)
+            return ApplicationResult.Forbidden(new { message = "Confirma tu correo antes de iniciar sesión. Utiliza Reenviar confirmación si necesitas un nuevo enlace.", requiresEmailConfirmation = true });
         return ApplicationResult.Success(new
         {
             token = tokens.Create(user),

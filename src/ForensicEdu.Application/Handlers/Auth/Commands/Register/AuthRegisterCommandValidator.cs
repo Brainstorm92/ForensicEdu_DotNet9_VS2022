@@ -19,6 +19,7 @@ public sealed class AuthRegisterCommandValidator : AbstractValidator<AuthRegiste
         RuleFor(x => x.Request.Profesion).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Request.TipoDocumento).Must(v => v is "DNI" or "CE" or "Pasaporte");
         RuleFor(x => x.Request.NivelEducativo).Must(v => v is "Pregrado" or "Bachiller" or "Licenciatura" or "Maestría" or "Doctorado");
+        RuleFor(x => x.Request.BirthDate).Must(ForensicEdu.Application.Common.Validation.BirthDateRules.Valid).WithMessage("Indique su fecha de nacimiento; no puede ser una fecha futura.");
         RuleFor(x => x.Request.AcceptTerms).Equal(true);
         RuleFor(x => x.Request.AcceptPrivacy).Equal(true);
         });

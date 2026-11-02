@@ -15,6 +15,7 @@ public sealed class ExamsSubmitCommandHandler(IEvaluationService _evaluationServ
             var result = await _evaluationService.SubmitExamAttemptAsync(submission, cancellationToken);
             return ApplicationResult.Success(result);
         }
+        catch (ForensicEdu.Application.Services.ExamAnswerConflictException ex){return ApplicationResult.Conflict(new{message=ex.Message,code="ANSWER_CONFLICT"});}
         catch (System.InvalidOperationException ex)
         {
             return ApplicationResult.Invalid(new { message = ex.Message });
