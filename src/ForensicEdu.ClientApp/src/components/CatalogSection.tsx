@@ -357,7 +357,7 @@ export const CatalogSection: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setSelectedProduct({ item: advisory, type: 'asesoria' })}
-                  className="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-ink font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
+                  className="w-full py-2.5 px-4 rounded-xl bg-brand hover:brightness-95 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-brand/20 transition-all"
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span>Adquirir y Conectar con Consultor</span>

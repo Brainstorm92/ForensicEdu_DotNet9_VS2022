@@ -44,3 +44,15 @@ Logo suministrado por el usuario: copias locales en AppIcon, Splash e Images/log
 El manifiesto referencia explícitamente @mipmap/appicon y @mipmap/appicon_round. Fondo azul oscuro y primer plano PNG transparente (Resources/AppIcon/appiconfg.png), escala 0.65 para respetar la máscara del launcher. El escudo transparente también se usa en Resources/Images/logo.png y Resources/Splash/splash.png.
 
 Edición realizada con la herramienta integrada image_gen a partir del PNG original. Prompt: extraer únicamente el escudo turquesa con huella, balanza y mira; conservar su identidad; retirar fondo, circuitos, esquinas blancas y letras; salida PNG transparente centrada con margen para Android.
+
+## Actualización estudiantil sobre develop (2026-11-03)
+
+Base: `origin/develop` en `4083d5d`. Rama: `codex/actualizar-movil-estudiantes`.
+
+- Sin rutas ni pantallas de administración: pagos se consultan y registran; su aprobación sigue en la web.
+- Videos privados RustFS se reproducen dentro del aula con la URL temporal autorizada por la API; se renueva antes de vencer conservando posición. No se envía el JWT al almacenamiento. Android activa protección de pantalla durante la reproducción.
+- Los eventos acreditados aparecen primero, con sala disponible desde quince minutos antes del inicio. Los cancelados/finalizados no habilitan acceso; el servidor vuelve a autorizar cada apertura.
+- Evaluaciones con selección múltiple y `If-Match`/`answerRevision`, recuperación del servidor ante conflicto y entrega con revisión actualizada.
+- Historial de pagos con búsqueda, filtro por estado, titular, fecha de pago y revisión.
+
+Validación: `tests/ForensicEdu.MobileChecks` cubre autorización, sesión Google, reloj del examen, respuestas múltiples, conflicto entre dispositivos, recuperación, enlaces seguros y ventana de acceso a eventos. Los contratos nuevos requieren desplegar el backend de develop. Verificar en una cuenta de pruebas reproducción/renovación de un video real y apertura de sala; las pruebas automáticas usan respuestas simuladas y no crean pagos ni intentos reales.

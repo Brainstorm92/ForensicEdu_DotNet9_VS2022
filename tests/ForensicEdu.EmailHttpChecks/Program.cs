@@ -30,6 +30,7 @@ using Microsoft.IdentityModel.Tokens;
 
 if(args.Contains("--video-storage-check")||args.Contains("--video-storage-cors")||args.Contains("--video-storage-live")){await VideoStorageScenario.Run(args);return;}
 if(args.Contains("--reenrollment-lock")){await ReenrollmentScenario.CheckPostgresLock();return;}
+if(args.Contains("--antifraud-lock")){await PaymentAntifraudScenario.CheckPostgresLock();return;}
 var builder=WebApplication.CreateBuilder(new WebApplicationOptions {EnvironmentName="Testing"});
 builder.Logging.ClearProviders();
 builder.WebHost.UseUrls(args.Contains("--serve")?"http://127.0.0.1:5097":"http://127.0.0.1:0");
@@ -37,6 +38,8 @@ builder.Configuration.AddInMemoryCollection(new Dictionary<string,string?> { ["E
 builder.Services.AddControllers().AddApplicationPart(typeof(EmailSettingsController).Assembly).ConfigureApplicationPartManager(p=>p.FeatureProviders.Add(new OnlyEmailControllers()));
 builder.Services.AddDbContext<ApplicationDbContext>(o=>o.UseInMemoryDatabase("email-http-"+Environment.ProcessId));
 builder.Services.AddScoped<ICoursePurchaseGate,CoursePurchaseGate>();
+builder.Services.AddScoped<IPaymentMutationGate,PaymentMutationGate>();
+if(args.Contains("--antifraud"))builder.Services.AddSingleton<IVoucherStorage,AntifraudVoucherStorage>();
 builder.Services.AddScoped<IApplicationDbContext>(s=>s.GetRequiredService<ApplicationDbContext>());
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser,CurrentUser>();
@@ -124,6 +127,7 @@ using var http=new HttpClient {BaseAddress=new Uri(url)};
 if(args.Contains("--student-payments")){await StudentPaymentsScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}
 if(args.Contains("--exam-scenarios")){await ExamScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}
 if(args.Contains("--videos")){await VideoScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}
+if(args.Contains("--antifraud")){await PaymentAntifraudScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}
 if(args.Contains("--reenrollment")){await ReenrollmentScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}
 if(args.Contains("--notifications")){await NotificationScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}
 if(args.Contains("--registration-email")){await RegistrationEmailScenario.Run(http,app.Services,tokenService);await app.StopAsync();return;}

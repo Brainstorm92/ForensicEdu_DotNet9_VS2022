@@ -5,6 +5,8 @@ public sealed class AdminApprovePaymentCommandValidator : AbstractValidator<Admi
 {
     public AdminApprovePaymentCommandValidator()
     {
+        RuleFor(x=>x.ReviewToken).MaximumLength(64);
+        RuleFor(x=>x.ReviewReason).MaximumLength(2000);
         RuleFor(x => x.PaymentId).NotEmpty().MaximumLength(200);
     }
 }

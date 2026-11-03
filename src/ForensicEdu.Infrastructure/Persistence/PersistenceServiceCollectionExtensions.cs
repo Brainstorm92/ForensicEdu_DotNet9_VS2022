@@ -17,6 +17,7 @@ public static class PersistenceServiceCollectionExtensions
             npgsql=>npgsql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
         services.AddScoped<IApplicationDbContext>(provider=>provider.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<ICoursePurchaseGate,CoursePurchaseGate>();
+        services.AddScoped<IPaymentMutationGate,PaymentMutationGate>();
         services.AddScoped<IUnitOfWork>(provider=>provider.GetRequiredService<ApplicationDbContext>());
         return services;
     }

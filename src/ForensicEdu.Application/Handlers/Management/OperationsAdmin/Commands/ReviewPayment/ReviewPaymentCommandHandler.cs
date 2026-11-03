@@ -7,9 +7,11 @@ using ForensicEdu.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 namespace ForensicEdu.Application.Handlers.Management.OperationsAdmin.Commands.ReviewPayment;
 
-public sealed class ReviewPaymentCommandHandler(IApplicationDbContext db, ICurrentUser current) : IRequestHandler<ReviewPaymentCommand,ApplicationResult>
+public sealed class ReviewPaymentCommandHandler(IApplicationDbContext db, ICurrentUser current, IPaymentMutationGate paymentGate) : IRequestHandler<ReviewPaymentCommand,ApplicationResult>
 {
-    public async Task<ApplicationResult> Handle(ReviewPaymentCommand request, CancellationToken ct)
+    public Task<ApplicationResult> Handle(ReviewPaymentCommand request, CancellationToken ct)
+        => paymentGate.ExecuteAsync(()=>Process(request,ct),ct);
+    private async Task<ApplicationResult> Process(ReviewPaymentCommand request,CancellationToken ct)
     {
         if (!EndpointSupport.HasRole(current, "1", "3")) return ApplicationResult.Forbidden();
         var item=await db.PaymentEvidences.Include(x=>x.Order).FirstOrDefaultAsync(x=>x.Id==request.Id,ct);if(item==null)return ApplicationResult.NotFound();
