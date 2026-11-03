@@ -16,7 +16,7 @@ public sealed class MyCoursesPage:AcademyPage
  private void Draw()
  {
   Body.Clear();Header("CURSOS","Mi formación","Expediente académico y plataforma de acreditación");var user=Session.User!;
-  var credential=Ui.Stack(Ui.Row(Ui.Eyebrow("● EXPEDIENTE ACADÉMICO"),new Image{Source="brand.png",WidthRequest=18,HeightRequest=18}),Ui.Text(user.Name,16,true),Ui.Text("Documento de identidad: "+user.Dni,10,false,"Muted"),Ui.Card(Ui.Stack(Ui.Eyebrow("ESTADO DE MATRÍCULA"),Ui.Text(user.Validity,11,true))));credential.Spacing=6;
+  var credential=Ui.Stack(Ui.Row(Ui.Eyebrow("● EXPEDIENTE ACADÉMICO"),new Image{Source="logo.png",WidthRequest=18,HeightRequest=18}),Ui.Text(user.Name,16,true),Ui.Text("Documento de identidad: "+user.Dni,10,false,"Muted"),Ui.Card(Ui.Stack(Ui.Eyebrow("ESTADO DE MATRÍCULA"),Ui.Text(user.Validity,11,true))));credential.Spacing=6;
   var credentialCard=Ui.Card(credential);credentialCard.SetDynamicResource(BackgroundColorProperty,"Raised");Body.Add(credentialCard);
   var tabs=new HorizontalStackLayout{Spacing=6};
   foreach(var name in new[]{"Todos","En progreso","Por evaluar","Aprobados"}){var count=enrollments.Count(e=>Matches(e,name));var button=Ui.Action($"{name}  {count}",()=>{filter=name;Draw();return Task.CompletedTask;},name!=filter);button.FontSize=9;button.MinimumHeightRequest=30;button.Padding=new Thickness(10,5);button.CornerRadius=14;tabs.Add(button);}
