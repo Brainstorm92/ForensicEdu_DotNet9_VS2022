@@ -1,5 +1,7 @@
 # Revisión funcional del proyecto frente al Word v5 y al PDF
 
+> Actualización 02/11/2026: implementado bloqueo global de mutaciones de pagos en PostgreSQL, revisión explícita de coincidencias parciales y auditoría de la decisión. Ver GUIA_ANTIFRAUDE_PAGOS.md. El diagnóstico original posterior se conserva como referencia histórica.
+
 > Actualización 01/11/2026: implementada la nueva matrícula por recompra después de dos intentos agotados, con ciclos independientes e historial conservado. Ver GUIA_NUEVA_MATRICULA.md. El diagnóstico original de ese pendiente se conserva como referencia.
 
 > Registro y correo: nacimiento obligatorio para registros nuevos, confirmación/reenvío y recuperación centralizados en el interruptor SMTP. Código probado y actualización --upgrade-registration autorizada, aplicada y verificada en PostgreSQL el 01/11/2026. Las seis cuentas existentes conservaron acceso, sin nacimientos ni confirmaciones inventados. Ver GUIA_REGISTRO_Y_CORREO.md.

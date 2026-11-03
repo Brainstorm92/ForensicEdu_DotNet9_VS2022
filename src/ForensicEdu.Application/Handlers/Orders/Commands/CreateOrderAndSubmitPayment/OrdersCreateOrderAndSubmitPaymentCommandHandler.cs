@@ -7,9 +7,11 @@ using ForensicEdu.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 namespace ForensicEdu.Application.Handlers.Orders.Commands.CreateOrderAndSubmitPayment;
 
-public sealed class OrdersCreateOrderAndSubmitPaymentCommandHandler(IApplicationDbContext _context, IAntifraudService _antifraudService, ICurrentUser current, ICoursePurchaseGate gate) : IRequestHandler<OrdersCreateOrderAndSubmitPaymentCommand, ApplicationResult>
+public sealed class OrdersCreateOrderAndSubmitPaymentCommandHandler(IApplicationDbContext _context, IAntifraudService _antifraudService, ICurrentUser current, ICoursePurchaseGate gate, IPaymentMutationGate paymentGate) : IRequestHandler<OrdersCreateOrderAndSubmitPaymentCommand, ApplicationResult>
 {
     public async Task<ApplicationResult> Handle(OrdersCreateOrderAndSubmitPaymentCommand message, CancellationToken cancellationToken)
+        => await paymentGate.ExecuteAsync(()=>Locked(message,cancellationToken),cancellationToken);
+    private async Task<ApplicationResult> Locked(OrdersCreateOrderAndSubmitPaymentCommand message,CancellationToken cancellationToken)
     {
         return message.Request.ProductType==ProductType.CURSO && message.Request.UserId==current.UserId
             ? await gate.ExecuteAsync(message.Request.UserId,message.Request.ProductId,()=>Process(message,cancellationToken),cancellationToken)
@@ -36,8 +38,8 @@ public sealed class OrdersCreateOrderAndSubmitPaymentCommandHandler(IApplication
         if (price == null) return ApplicationResult.NotFound(new { message = "Producto no disponible." });
         if (price.Value != request.Amount) return ApplicationResult.Invalid(new { message = "El monto no coincide con el precio vigente del producto." });
 
-        var bank=request.BankName.Trim().ToUpperInvariant();var operation=request.OperationNumber.Trim().ToUpperInvariant();
-        var pending=await _context.PaymentEvidences.Include(p=>p.Order).FirstOrDefaultAsync(p=>p.BankName==bank && p.OperationNumber==operation &&
+        var bank=PaymentAntifraud.Bank(request.BankName);var operation=PaymentAntifraud.Operation(request.OperationNumber);
+        var pending=await _context.PaymentEvidences.Include(p=>p.Order).FirstOrDefaultAsync(p=>p.BankName.Trim().ToUpper()==bank && p.OperationNumber.Trim().ToUpper().Replace(" ","").Replace("-","").Replace("/","")==operation &&
             (p.Status==PaymentStatus.PENDIENTE || p.Status==PaymentStatus.EN_REVISION || p.Status==PaymentStatus.OBSERVADO),cancellationToken);
         if(pending!=null){
             if(pending.Order?.UserId==user.Id && pending.Order.ProductId==request.ProductId && pending.Order.ProductType==request.ProductType && pending.Amount==request.Amount)
@@ -67,7 +69,7 @@ public sealed class OrdersCreateOrderAndSubmitPaymentCommandHandler(IApplication
             {
                 isFraud = true,
                 message = antifraudCheck.Message,
-                conflictingOrderCode = antifraudCheck.ConflictingOrderCode
+                code = "PAYMENT_DUPLICATE"
             });
         }
 
@@ -99,8 +101,8 @@ public sealed class OrdersCreateOrderAndSubmitPaymentCommandHandler(IApplication
         var payment = new PaymentEvidence
         {
             OrderId = order.Id,
-            BankName = request.BankName.Trim().ToUpperInvariant(),
-            OperationNumber = request.OperationNumber.Trim().ToUpperInvariant(),
+            BankName = bank,
+            OperationNumber = operation,
             OperationDate = request.OperationDate,
             Amount = request.Amount,
             AccountHolderName = request.AccountHolderName.Trim().ToUpperInvariant(),
@@ -110,6 +112,11 @@ public sealed class OrdersCreateOrderAndSubmitPaymentCommandHandler(IApplication
             RegisteredAt = DateTime.UtcNow
         };
 
+        var assessment=await PaymentAntifraud.AssessAsync(_context,payment,cancellationToken);
+        if(assessment.PartialMatches.Count>0){
+            payment.Status=PaymentStatus.EN_REVISION;
+            _context.AuditLogs.Add(new AuditLog{UserId=current.UserId,Action="PAYMENT_PARTIAL_MATCH",EntityType="PaymentEvidence",EntityId=payment.Id,Details=System.Text.Json.JsonSerializer.Serialize(assessment.PartialMatches)});
+        }
         _context.PaymentEvidences.Add(payment);
 
         _context.AuditLogs.Add(new AuditLog

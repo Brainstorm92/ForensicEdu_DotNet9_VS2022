@@ -14,6 +14,10 @@ public sealed class CoursePurchaseGate(ApplicationDbContext db) : ICoursePurchas
             var gate=TestLocks[(uint)StringComparer.Ordinal.GetHashCode(key)%TestLocks.Length];
             await gate.WaitAsync(ct);try{return await operation();}finally{gate.Release();}
         }
+        if(db.Database.CurrentTransaction!=null){
+            await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key},0))",ct);
+            return await operation();
+        }
         await using var transaction=await db.Database.BeginTransactionAsync(ct);
         await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key},0))",ct);
         var result=await operation();

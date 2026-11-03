@@ -7,9 +7,11 @@ using ForensicEdu.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 namespace ForensicEdu.Application.Handlers.Admin.Commands.ApprovePayment;
 
-public sealed class AdminApprovePaymentCommandHandler(IApplicationDbContext _context, ICurrentUser current, ICoursePurchaseGate gate) : IRequestHandler<AdminApprovePaymentCommand, ApplicationResult>
+public sealed class AdminApprovePaymentCommandHandler(IApplicationDbContext _context, ICurrentUser current, ICoursePurchaseGate gate, IPaymentMutationGate paymentGate) : IRequestHandler<AdminApprovePaymentCommand, ApplicationResult>
 {
     public async Task<ApplicationResult> Handle(AdminApprovePaymentCommand message, CancellationToken cancellationToken)
+        => await paymentGate.ExecuteAsync(()=>Locked(message,cancellationToken),cancellationToken);
+    private async Task<ApplicationResult> Locked(AdminApprovePaymentCommand message,CancellationToken cancellationToken)
     {
         var order=await _context.PaymentEvidences.AsNoTracking().Where(p=>p.Id==message.PaymentId).Select(p=>p.Order).FirstOrDefaultAsync(cancellationToken);
         return order?.ProductType==ProductType.CURSO
@@ -34,16 +36,21 @@ public sealed class AdminApprovePaymentCommandHandler(IApplicationDbContext _con
             return ApplicationResult.Invalid(new { message = "El monto no corresponde a la orden." });
         if (string.IsNullOrWhiteSpace(payment.VoucherFileHash))
             return ApplicationResult.Invalid(new { message = "Debe adjuntar un comprobante antes de aprobar el pago." });
-        if (await _context.PaymentEvidences.AnyAsync(p => p.Id != payment.Id && p.Status == PaymentStatus.APROBADO &&
-            ((p.BankName == payment.BankName && p.OperationNumber == payment.OperationNumber) ||
-             p.PaymentFingerprint == payment.PaymentFingerprint ||
-             (payment.VoucherFileHash != "" && p.VoucherFileHash == payment.VoucherFileHash))))
-        {
-            payment.Status = PaymentStatus.DUPLICADO;
-            _context.AuditLogs.Add(new AuditLog { UserId = adminUserId, Action = "PAYMENT_DUPLICATE", EntityType = "PaymentEvidence", EntityId = payment.Id });
+        var assessment=await PaymentAntifraud.AssessAsync(_context,payment,cancellationToken);
+        if(assessment.ExactDuplicates.Count>0){
+            payment.Status=PaymentStatus.DUPLICADO;
+            _context.AuditLogs.Add(new AuditLog{UserId=adminUserId,Action="PAYMENT_DUPLICATE",EntityType="PaymentEvidence",EntityId=payment.Id,Details=System.Text.Json.JsonSerializer.Serialize(assessment.ExactDuplicates)});
             await _context.SaveChangesAsync(cancellationToken);
-            return ApplicationResult.Conflict(new { message = "La operación o el comprobante ya se utilizó en un pago aprobado." });
+            return ApplicationResult.Conflict(new{code="PAYMENT_DUPLICATE",message="La operación o el comprobante ya se utilizó en un pago aprobado. No se puede autorizar una excepción."});
         }
+        if(assessment.PartialMatches.Count>0 && (message.ReviewToken!=assessment.ReviewToken||string.IsNullOrWhiteSpace(message.ReviewReason)||message.ReviewReason.Trim().Length<10)){
+            payment.Status=PaymentStatus.EN_REVISION;
+            _context.AuditLogs.Add(new AuditLog{UserId=adminUserId,Action="PAYMENT_PARTIAL_MATCH",EntityType="PaymentEvidence",EntityId=payment.Id,Details=System.Text.Json.JsonSerializer.Serialize(assessment.PartialMatches)});
+            await _context.SaveChangesAsync(cancellationToken);
+            return ApplicationResult.Conflict(new{code="PAYMENT_REVIEW_REQUIRED",message="Hay coincidencias que requieren revisión manual. Abre Revisar coincidencias, verifica los comprobantes y justifica la aprobación."});
+        }
+        if(assessment.PartialMatches.Count>0)
+            _context.AuditLogs.Add(new AuditLog{UserId=adminUserId,Action="PAYMENT_PARTIAL_MATCH_ACCEPTED",EntityType="PaymentEvidence",EntityId=payment.Id,Details=message.ReviewReason!.Trim()+" | "+System.Text.Json.JsonSerializer.Serialize(assessment.PartialMatches)});
 
         List<Enrollment> previousEnrollments = [];
         if (payment.Order.ProductType == ProductType.CURSO)

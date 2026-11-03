@@ -44,6 +44,7 @@ services.AddSingleton<IEmailConfirmation,TestConfirmation>();
 services.AddDatabaseResilience(new ConfigurationBuilder().Build());
 services.AddDbContext<ApplicationDbContext>(o => o.UseInMemoryDatabase(Guid.NewGuid().ToString()));
 services.AddScoped<ICoursePurchaseGate,CoursePurchaseGate>();
+        services.AddScoped<IPaymentMutationGate,PaymentMutationGate>();
 services.AddScoped<IApplicationDbContext>(p => p.GetRequiredService<ApplicationDbContext>());
 services.AddScoped<IUnitOfWork>(p => p.GetRequiredService<ApplicationDbContext>());
 var actor = new TestUser(); services.AddSingleton<ICurrentUser>(actor);
