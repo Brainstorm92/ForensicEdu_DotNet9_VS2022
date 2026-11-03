@@ -22,11 +22,12 @@ public class AdminController(ISender sender) : ControllerBase
         return (await sender.Send(new AdminGetPendingPaymentsQuery(), HttpContext.RequestAborted)).ToActionResult();
     }
 
+    public sealed record PaymentApprovalReview(string? ReviewToken=null,string? ReviewReason=null);
     [Authorize(Roles = "1,3")]
     [HttpPost("payments/{paymentId}/approve")]
-    public async Task<IActionResult> ApprovePayment(string paymentId, [FromQuery] string? adminUserId = null)
+    public async Task<IActionResult> ApprovePayment(string paymentId, [FromBody(EmptyBodyBehavior=Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] PaymentApprovalReview? review=null, [FromQuery] string? adminUserId = null)
     {
-        return (await sender.Send(new AdminApprovePaymentCommand(paymentId), HttpContext.RequestAborted)).ToActionResult();
+        return (await sender.Send(new AdminApprovePaymentCommand(paymentId,review?.ReviewToken,review?.ReviewReason), HttpContext.RequestAborted)).ToActionResult();
     }
 
     [Authorize(Roles = "1,2")]

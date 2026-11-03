@@ -1,4 +1,5 @@
 using MediatR;
+using ForensicEdu.Application.Services;
 using System.Text.Json;
 using ForensicEdu.Application.Common.Interfaces;
 using ForensicEdu.Application.Common.Results;
@@ -7,11 +8,16 @@ using ForensicEdu.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 namespace ForensicEdu.Application.Handlers.ExamSessions.Commands.Start;
 
-public sealed class ExamSessionsStartCommandHandler(IApplicationDbContext db, ICurrentUser current) : IRequestHandler<ExamSessionsStartCommand, ApplicationResult>
+public sealed class ExamSessionsStartCommandHandler(IApplicationDbContext db, ICurrentUser current, ICoursePurchaseGate gate) : IRequestHandler<ExamSessionsStartCommand, ApplicationResult>
 {
-    public async Task<ApplicationResult> Handle(ExamSessionsStartCommand message, CancellationToken cancellationToken)
+    public Task<ApplicationResult> Handle(ExamSessionsStartCommand message, CancellationToken cancellationToken) => gate.ExecuteAsync(current.UserId!, "exam", () => Start(message,cancellationToken),cancellationToken);
+    private async Task<ApplicationResult> Start(ExamSessionsStartCommand message,CancellationToken cancellationToken)
     {
+        var account=await db.Users.AsNoTracking().FirstOrDefaultAsync(u=>u.Id==current.UserId,cancellationToken);
+        if(account==null||account.ValidUntil<=DateTime.UtcNow||account.Status is AccountStatus.SUSPENDIDO or AccountStatus.VENCIDA or AccountStatus.PENDIENTE_DE_ELIMINACION or AccountStatus.ELIMINADO)return ApplicationResult.Forbidden(new{message="Tu cuenta no está habilitada para iniciar evaluaciones."});
         var enrollmentId = message.EnrollmentId;
+        var other=await db.ExamAttempts.AnyAsync(a=>a.UserId==current.UserId&&a.CompletedAt==null&&a.EnrollmentId!=enrollmentId,cancellationToken);
+        if(other)return ApplicationResult.Conflict(new{message="Primero finaliza la evaluación que ya tienes en curso."});
 
         var userId = current.UserId!;
         var enrollment = await db.Enrollments.Include(e => e.Course).Include(e => e.ExamAttempts)
@@ -31,7 +37,7 @@ public sealed class ExamSessionsStartCommandHandler(IApplicationDbContext db, IC
             var questions = doc.RootElement.EnumerateArray().OrderBy(_ => System.Security.Cryptography.RandomNumberGenerator.GetInt32(int.MaxValue)).ToArray();
             if (questions.Length == 0) return ApplicationResult.Invalid(new { message = "El curso no tiene preguntas." });
             foreach (var q in questions)
-                if (!q.TryGetProperty("id", out _) || !q.TryGetProperty("correctOptionIndex", out _))
+                if (!q.TryGetProperty("id", out _) || !q.TryGetProperty("correctOptionIndex", out _) || !q.TryGetProperty("options",out _) || !q.TryGetProperty("question",out _))
                     return ApplicationResult.Invalid(new { message = "Revise el formato del banco de preguntas." });
             attempt = new ExamAttempt { EnrollmentId = enrollment.Id, UserId = userId, CourseId = enrollment.CourseId,
                 AttemptNumber = previous.Count + 1, StartedAt = DateTime.UtcNow, Status = ExamStatus.EN_CURSO,
@@ -41,11 +47,6 @@ public sealed class ExamSessionsStartCommandHandler(IApplicationDbContext db, IC
             db.AuditLogs.Add(new AuditLog { UserId = userId, Action = "EXAM_STARTED", EntityType = "ExamAttempt", EntityId = attempt.Id });
             await db.SaveChangesAsync(cancellationToken);
         }
-        using var snapshot = JsonDocument.Parse(attempt.QuestionsSnapshotJson);
-        var publicQuestions = snapshot.RootElement.EnumerateArray().Select(q => q.EnumerateObject()
-            .Where(p => p.Name != "correctOptionIndex" && p.Name != "correctAnswerIndex" && p.Name != "explanation")
-            .ToDictionary(p => p.Name, p => p.Value.Clone())).ToList();
-        return ApplicationResult.Success(new { attempt.Id, attempt.AttemptNumber, attempt.StartedAt, expiresAt = attempt.StartedAt.AddMinutes(10),
-            serverTime = DateTime.UtcNow, questions = publicQuestions, savedAnswers = JsonSerializer.Deserialize<JsonElement>(attempt.AnswersJson) });
+        return ApplicationResult.Success(ExamAnswers.Session(attempt));
     }
 }

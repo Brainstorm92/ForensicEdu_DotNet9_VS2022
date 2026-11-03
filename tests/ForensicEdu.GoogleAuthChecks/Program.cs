@@ -40,10 +40,12 @@ var db=new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext
 var google=new IdentityAdapter();var passwords=new PasswordService();var handler=new GoogleSignInCommandHandler(db,google,new Tokens(),passwords,new PersistenceErrors());
 GoogleSignInCommand Command(GoogleProfileInput? profile=null,string? password=null)=>new(new GoogleSignInInput("fixture",profile,password),nonce);
 var first=await handler.Handle(Command(),default);Check(first.Value is GoogleAuthResponse{RequiresRegistration:true}&&!await db.Users.AnyAsync(),"Primer acceso solicita perfil sin crear una cuenta incompleta");
-var profile=new GoogleProfileInput("Alumna","Google","GTEST001","999000111","DNI","Perú","Licenciatura","Instituto","Perito",true,true);
+var profile=new GoogleProfileInput("Alumna","Google","GTEST001","999000111","DNI","Perú","Licenciatura","Instituto","Perito",true,true,new DateOnly(1995,4,20));
 var inputValidator=new GoogleSignInCommandValidator();Check(!inputValidator.Validate(Command(profile with{AcceptTerms=false})).IsValid,"Registro Google exige aceptar términos");
 Check(!inputValidator.Validate(Command(profile with{AcceptPrivacy=false})).IsValid,"Registro Google exige consentimiento de datos");
 var signup=await handler.Handle(Command(profile),default);var student=await db.Users.SingleAsync();Check(signup.Value is GoogleAuthResponse{Token:not null}&&student.Role==UserRole.ESTUDIANTE&&student.GoogleSubject==google.Identity.Subject&&student.PasswordHash=="","Alta Google crea estudiante con identidad propia y sin contraseña ficticia");
+Check(student.BirthDate==profile.BirthDate&&student.EmailConfirmedAt.HasValue,"Google conserva nacimiento y reconoce el correo verificado por el proveedor");
+Check(!inputValidator.Validate(Command(profile with{BirthDate=null})).IsValid,"Registro Google exige fecha de nacimiento");
 Check(student.ValidUntil>DateTime.UtcNow.AddDays(29)&&!student.HasApprovedPurchase,"Google conserva vigencia inicial y no simula una compra");
 Check((await handler.Handle(Command(),default)).Value is GoogleAuthResponse{Token:not null}&&await db.Users.CountAsync()==1,"Reingreso usa sub sin duplicar usuarios");
 Check(!passwords.Verify("cualquier-clave",student.PasswordHash),"Cuenta Google no produce error al intentar acceso con contraseña");

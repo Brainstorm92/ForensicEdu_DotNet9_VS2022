@@ -23,8 +23,8 @@ public class AntifraudService : IAntifraudService
     {
         // Normalization matching Francisco v5 Section 9:
         // banco + num_operacion + fecha + monto + titular
-        var cleanBank = bank.Trim().ToUpperInvariant();
-        var cleanOp = operationNumber.Trim().ToUpperInvariant();
+        var cleanBank = PaymentAntifraud.Bank(bank);
+        var cleanOp = PaymentAntifraud.Operation(operationNumber);
         var cleanDate = date.ToString("yyyy-MM-dd");
         var cleanAmount = amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
         var cleanHolder = accountHolder.Trim().ToUpperInvariant();
@@ -64,7 +64,7 @@ public class AntifraudService : IAntifraudService
         var duplicateFingerprint = await _context.PaymentEvidences
             .Include(p => p.Order)
             .FirstOrDefaultAsync(p => (p.PaymentFingerprint == fingerprint ||
-                (p.BankName == bank.Trim().ToUpperInvariant() && p.OperationNumber == operationNumber.Trim().ToUpperInvariant()))
+                (p.BankName.Trim().ToUpper() == PaymentAntifraud.Bank(bank) && p.OperationNumber.Trim().ToUpper().Replace(" ", "").Replace("-", "").Replace("/", "") == PaymentAntifraud.Operation(operationNumber)))
                 && p.Status == PaymentStatus.APROBADO, cancellationToken);
 
         if (duplicateFingerprint != null)
@@ -75,7 +75,7 @@ public class AntifraudService : IAntifraudService
                 VoucherHash: voucherHash,
                 ConflictingPaymentId: duplicateFingerprint.Id,
                 ConflictingOrderCode: duplicateFingerprint.Order?.OrderCode ?? duplicateFingerprint.OrderId,
-                Message: $"ALERTA ANTIFRAUDE: Huella bancaria duplicada. Esta operación ya fue aprobada en la orden '{duplicateFingerprint.Order?.OrderCode}' por el titular '{duplicateFingerprint.AccountHolderName}'."
+                Message: "Esta operación bancaria ya fue utilizada en un pago aprobado."
             );
         }
 
@@ -94,7 +94,7 @@ public class AntifraudService : IAntifraudService
                     VoucherHash: voucherHash,
                     ConflictingPaymentId: duplicateVoucher.Id,
                     ConflictingOrderCode: duplicateVoucher.Order?.OrderCode ?? duplicateVoucher.OrderId,
-                    Message: $"ALERTA ANTIFRAUDE: Archivo comprobante idéntico detectado (SHA-256 colisiona con orden '{duplicateVoucher.Order?.OrderCode}')."
+                    Message: "Este comprobante ya fue utilizado en un pago aprobado."
                 );
             }
         }

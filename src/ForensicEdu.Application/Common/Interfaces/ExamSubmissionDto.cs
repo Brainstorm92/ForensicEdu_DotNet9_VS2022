@@ -11,5 +11,8 @@ public record ExamSubmissionDto(
     string EnrollmentId,
     string UserId,
     Dictionary<string, int> SelectedAnswers, // QuestionId -> SelectedOptionIndex
-    int DurationSeconds
+    int DurationSeconds,
+    Dictionary<string,int[]>? SelectedMultipleAnswers = null,
+    string? AttemptId = null,
+    string? AnswerRevision = null
 );

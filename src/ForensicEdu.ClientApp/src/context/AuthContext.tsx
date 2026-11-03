@@ -1,15 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiRequest, setAccessToken } from '../services/apiTransport';
+import { apiRequest, setAccessToken, hasAccessToken } from '../services/apiTransport';
 export { authHeaders } from '../services/apiTransport';
 import type { UserProfile, UserRole } from '../types';
 
 export interface Registration {
   nombres: string; apellidos: string; email: string; dni: string; phone: string; password: string;
   tipoDocumento: string; paisResidencia: string; nivelEducativo: string; institucionEducativa: string;
-  profesion: string; acceptTerms: boolean; acceptPrivacy: boolean;
+  profesion: string; birthDate: string; acceptTerms: boolean; acceptPrivacy: boolean;
 }
+export interface RegistrationResult {userId:string;message:string;confirmationRequired:boolean;emailSent:boolean}
 interface AccountDto {
-  id: string; nombres: string; apellidos: string; fullName: string; email: string; dni: string; phone: string;
+  id: string; nombres: string; apellidos: string; fullName: string; email: string; dni: string; phone: string; birthDate?:string|null;
   tipoDocumento: UserProfile['tipoDocumento']; paisResidencia: string; nivelEducativo: UserProfile['nivelEducativo'];
   institucionEducativa: string; profesion: string; role: number; status: number; registeredAt: string;
   validUntil: string; hasApprovedPurchase: boolean; lastPurchaseDate?: string;
@@ -19,7 +20,7 @@ export const accountRequest = apiRequest<any>;
 const roles: UserRole[] = ['estudiante', 'superadmin', 'admin_academico', 'admin_financiero', 'docente', 'soporte', 'estudiante', 'consultor'];
 export function profile(dto: AccountDto): UserProfile {
   return { id: dto.id, nombres: dto.nombres || dto.fullName, apellidos: dto.apellidos || '',
-    email: dto.email, numeroDocumento: dto.dni, telefono: dto.phone, tipoDocumento: dto.tipoDocumento,
+    birthDate: dto.birthDate||undefined, email: dto.email, numeroDocumento: dto.dni, telefono: dto.phone, tipoDocumento: dto.tipoDocumento,
     paisResidencia: dto.paisResidencia, nivelEducativo: dto.nivelEducativo,
     institucionEducativa: dto.institucionEducativa, profesion: dto.profesion,
     role: roles[dto.role] || 'estudiante', createdAt: dto.registeredAt, validUntil: dto.validUntil || '',
@@ -28,8 +29,9 @@ export function profile(dto: AccountDto): UserProfile {
 }
 export interface GoogleAuthResult {token?:string;requiresRegistration:boolean;requiresLinkPassword:boolean;email:string;nombres:string;apellidos:string;message:string;}
 interface AuthState {
+  isRestoring:boolean;
   user: UserProfile | null;
-  register: (data: Registration) => Promise<string>;
+  register: (data: Registration) => Promise<RegistrationResult>;
   login: (email: string, password: string) => Promise<void>;
   googleLogin:(credential:string,profile?:Omit<Registration,'email'|'password'>,linkPassword?:string)=>Promise<GoogleAuthResult>;
   refresh: () => Promise<void>;
@@ -38,12 +40,14 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [isRestoring,setRestoring]=useState(hasAccessToken);
+  useEffect(()=>{if(!hasAccessToken()){setRestoring(false);return;}let live=true;apiRequest<AccountDto>('/auth/me',{signal:AbortSignal.timeout(12000)}).then(value=>{if(live)setUser(profile(value));}).catch(()=>{if(live){setAccessToken(null);setUser(null);}}).finally(()=>{if(live)setRestoring(false);});return()=>{live=false;};},[]);
   useEffect(()=>{const expired=()=>setUser(null);window.addEventListener('forensicedu:session-expired',expired);return ()=>window.removeEventListener('forensicedu:session-expired',expired);},[]);
   const refresh = async () => { setUser(profile(await accountRequest('/auth/me'))); };
   const register = async (data: Registration) => {
     const result = await accountRequest('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...data, fullName: `${data.nombres} ${data.apellidos}` }) });
-    return result.userId as string;
+    return result as RegistrationResult;
   };
   const login = async (email: string, password: string) => {
     setAccessToken(null); setUser(null);
@@ -56,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if(result.token){setAccessToken(result.token);try{await refresh();}catch(error){setAccessToken(null);setUser(null);throw error;}}return result;
   };
   const logout = () => { setAccessToken(null); setUser(null); };
-  return <AuthContext.Provider value={{ user, register, login, googleLogin, refresh, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, isRestoring, register, login, googleLogin, refresh, logout }}>{children}</AuthContext.Provider>;
 }
 export function useAuth() {
   const auth = useContext(AuthContext);

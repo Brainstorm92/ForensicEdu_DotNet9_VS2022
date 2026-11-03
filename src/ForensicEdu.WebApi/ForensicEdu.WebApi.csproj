@@ -24,7 +24,10 @@
     </PackageReference>
     <PackageReference Include="Scalar.AspNetCore" Version="2.0.2" />
   </ItemGroup>
-  <Target Name="BuildInteractiveClient" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+  <ItemGroup Condition="'$(SkipInteractiveClient)' == 'true'">
+    <Content Remove="wwwroot\**\*" />
+  </ItemGroup>
+  <Target Name="BuildInteractiveClient" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipInteractiveClient)' != 'true'">
     <Exec WorkingDirectory="$(MSBuildProjectDirectory)\..\ForensicEdu.ClientApp" Command="npm install" Condition="!Exists('$(MSBuildProjectDirectory)\..\ForensicEdu.ClientApp\node_modules\vite\bin\vite.js')" />
     <Exec WorkingDirectory="$(MSBuildProjectDirectory)\..\ForensicEdu.ClientApp" Command="npm run build" />
     <ItemGroup>

@@ -1,6 +1,9 @@
 export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-let accessToken: string | null = null;
-export function setAccessToken(value: string | null) { accessToken = value; }
+const tabSessionKey='forensicedu:tab-session';
+let accessToken:string|null=null;
+try{accessToken=sessionStorage.getItem(tabSessionKey);}catch{/* Storage may be unavailable in a restricted browser. */}
+export const hasAccessToken=()=>!!accessToken;
+export function setAccessToken(value:string|null){accessToken=value;try{if(value)sessionStorage.setItem(tabSessionKey,value);else sessionStorage.removeItem(tabSessionKey);}catch{}}
 export function authHeaders(): Record<string,string> { return accessToken ? {Authorization:`Bearer ${accessToken}`} : {}; }
 export class ApiError extends Error { constructor(message: string, public status: number, public fields:Record<string,string[]>={}) { super(message); } }
 async function response(path: string, init: RequestInit = {}) {

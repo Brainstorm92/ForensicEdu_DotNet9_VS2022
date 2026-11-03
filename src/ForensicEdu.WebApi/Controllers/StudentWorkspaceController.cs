@@ -35,7 +35,7 @@ public sealed class StudentWorkspaceController(ISender sender) : ControllerBase
 
     [HttpGet("enrollments/{id}/modules/{moduleId}/video")]
     public async Task<IActionResult> GetModuleVideo(string id, string moduleId)
-        => (await sender.Send(new GetModuleVideoQuery(id, moduleId),HttpContext.RequestAborted)).ToActionResult();
+    { Response.Headers.CacheControl="no-store, private";return (await sender.Send(new GetModuleVideoQuery(id,moduleId),HttpContext.RequestAborted)).ToActionResult(); }
 
     [HttpGet("enrollments/{id}/documents/{documentId}")]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]

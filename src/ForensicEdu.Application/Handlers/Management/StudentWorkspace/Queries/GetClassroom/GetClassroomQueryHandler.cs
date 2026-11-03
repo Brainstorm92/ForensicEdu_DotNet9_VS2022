@@ -15,6 +15,6 @@ public sealed class GetClassroomQueryHandler(IApplicationDbContext db, ICurrentU
         if(enrollment.Status!="ACTIVA" && enrollment.Status!="COMPLETADA")return ApplicationResult.Forbidden();
         if(!await db.Orders.AnyAsync(x=>x.Id==enrollment.OrderId && x.UserId==current.UserId && x.Status==OrderStatus.APROBADO,ct))return ApplicationResult.Forbidden();
         return ApplicationResult.Success(new {enrollment.Id,enrollment.CourseId,course=new {enrollment.Course.Title,enrollment.Course.ShortCode,enrollment.Course.Price,enrollment.Course.AcademicHours,enrollment.Course.ImageUrl,enrollment.Course.Instructor,enrollment.Course.InstructorImageUrl,enrollment.Course.IsActive,enrollment.Course.IsPublished},enrollment.ProgressPercent,enrollment.ExamStatus,enrollment.AttemptsUsed,enrollment.FinalGrade,
-            modules=enrollment.Course.Modules.OrderBy(m=>m.OrderIndex).Select(m=>new {m.Id,m.Title,m.Duration,m.OrderIndex,hasVideo=m.VideoStreamingUrl!="",documents=m.Documents.Select(d=>new {d.Id,d.Title,d.FileType,d.FileSize})}) });
+            modules=enrollment.Course.Modules.OrderBy(m=>m.OrderIndex).Select(m=>new {m.Id,m.Title,m.Duration,m.OrderIndex,hasVideo=m.VideoStreamingUrl!=""||m.StreamingId.StartsWith("videos/"),hasPrivateVideo=m.StreamingId.StartsWith("videos/"),documents=m.Documents.Select(d=>new {d.Id,d.Title,d.FileType,d.FileSize})}) });
     }
 }

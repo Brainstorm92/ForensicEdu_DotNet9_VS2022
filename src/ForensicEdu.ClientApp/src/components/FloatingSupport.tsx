@@ -68,7 +68,7 @@ export const FloatingSupport: React.FC = () => {
 
       {/* Support Dialog Modal */}
       {isOpen && (
-        <div className="support-dialog fixed bottom-20 right-4 sm:right-6 z-50 w-96 max-w-[calc(100vw-2rem)] bg-panel border border-line/80 rounded-2xl shadow-xl shadow-slate-950/80 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div role="dialog" aria-modal="false" aria-label="Centro de ayuda y soporte" className="support-dialog fixed bottom-20 right-4 sm:right-6 z-50 w-96 max-w-[calc(100vw-2rem)] bg-panel border border-line/80 rounded-2xl shadow-xl shadow-slate-950/80 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-canvas to-panel p-4 border-b border-line flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -82,6 +82,7 @@ export const FloatingSupport: React.FC = () => {
             </div>
             <button
               onClick={() => setIsOpen(false)}
+              aria-label="Cerrar soporte"
               className="p-1 rounded-md text-muted hover:text-ink hover:bg-surface-low transition-colors"
             >
               <X className="w-4 h-4" />
@@ -89,7 +90,7 @@ export const FloatingSupport: React.FC = () => {
           </div>
 
           {/* Body */}
-          <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div className="support-dialog-body p-4 space-y-4 overflow-y-auto">
             {/* Quick Contact Links */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               <a

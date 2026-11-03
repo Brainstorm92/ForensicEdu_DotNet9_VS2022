@@ -1,0 +1,21 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS build
+WORKDIR /src
+COPY src/ForensicEdu.Domain/ src/ForensicEdu.Domain/
+COPY src/ForensicEdu.Application/ src/ForensicEdu.Application/
+COPY src/ForensicEdu.Infrastructure/ src/ForensicEdu.Infrastructure/
+COPY src/ForensicEdu.WebApi/ src/ForensicEdu.WebApi/
+RUN dotnet publish src/ForensicEdu.WebApi/ForensicEdu.WebApi.csproj \
+    -c Release -o /out -p:SkipInteractiveClient=true -p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim AS runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libfontconfig1 fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY --from=build /out/ ./
+RUN mkdir -p /app/App_Data && chown -R app:app /app/App_Data
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
+USER app
+ENTRYPOINT ["dotnet", "ForensicEdu.WebApi.dll"]

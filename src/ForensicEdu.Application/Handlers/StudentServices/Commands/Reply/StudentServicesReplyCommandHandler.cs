@@ -1,4 +1,5 @@
 using MediatR;
+using ForensicEdu.Application.Services;
 using System.Text.Json;
 using ForensicEdu.Application.Common.Interfaces;
 using ForensicEdu.Application.Common.Results;
@@ -23,6 +24,9 @@ public sealed class StudentServicesReplyCommandHandler(IApplicationDbContext db,
         responses.Add(JsonSerializer.SerializeToElement(new { authorId = current.UserId, message = request.Message.Trim(), timestamp = DateTime.UtcNow }));
         ticket.ResponsesJson = JsonSerializer.Serialize(responses);
         ticket.Status = staff ? TicketStatus.RESPONDIDO : TicketStatus.ABIERTO;
+        if (staff && ticket.UserId != current.UserId)
+            StudentNotifications.Add(db, ticket.UserId, "support:" + ticket.Id + ":" + Guid.NewGuid(), "SOPORTE",
+                "Tienes una respuesta de soporte", $"Respondimos a tu consulta {ticket.TicketCode}: {ticket.Subject}.\n\n{request.Message.Trim()}", "mis-consultas");
         db.AuditLogs.Add(new AuditLog { UserId = current.UserId, Action = "TICKET_REPLIED", EntityType = "SupportTicket", EntityId = ticket.Id });
         await db.SaveChangesAsync(cancellationToken);
         return ApplicationResult.Success(new {ticket.Id,ticket.TicketCode,ticket.UserId,ticket.UserName,ticket.UserEmail,ticket.Subject,ticket.Category,ticket.Message,ticket.Status,ticket.CreatedAt,ticket.ResponsesJson});

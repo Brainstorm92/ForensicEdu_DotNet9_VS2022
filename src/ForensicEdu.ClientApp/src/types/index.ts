@@ -23,6 +23,7 @@ export interface UserProfile {
   tipoDocumento: 'DNI' | 'CE' | 'Pasaporte';
   numeroDocumento: string;
   paisResidencia: string;
+  birthDate?: string;
   email: string;
   telefono: string;
   nivelEducativo: 'Pregrado' | 'Bachiller' | 'Licenciatura' | 'Maestría' | 'Doctorado';
@@ -60,6 +61,8 @@ export interface Course {
 }
 
 export interface CourseModule {
+  hasVideo?: boolean;
+  hasPrivateVideo?: boolean;
   id: string;
   title: string;
   duration: string;
@@ -156,6 +159,7 @@ export interface Payment {
 }
 
 export interface Enrollment {
+  canReenroll?: boolean;
   id: string;
   userId: string;
   courseId: string;
